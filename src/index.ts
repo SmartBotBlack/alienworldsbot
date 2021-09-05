@@ -92,25 +92,35 @@ const cookies = [
 ];
 
 const args = [
-  "--no-sandbox",
-  "--disable-setuid-sandbox",
-  "--disable-infobars",
-  "--window-position=0,0",
-  "--ignore-certifcate-errors",
-  "--ignore-certifcate-errors-spki-list",
+  // "--no-sandbox",
+  // "--disable-setuid-sandbox",
+  // "--disable-infobars",
+  // "--window-position=0,0",
+  // "--ignore-certifcate-errors",
+  // "--ignore-certifcate-errors-spki-list",
   "--window-size=1680,1220",
-  "--disable-infobars",
+  // "--disable-infobars",
   // '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3312.0 Safari/537.36"',
+  "--disable-gpu",
+  "--no-sandbox",
+  "--enable-features=NetworkService,NetworkServiceInProcess",
+  "--disable-dev-shm-usage",
+  "--disable-infobars",
+  "--disable-extensions",
 ];
 
 const options = {
   args,
   ignoreDefaultArgs: ["--enable-automation"],
   headless: false,
-  slowMo: 120,
-  defaultViewport: null,
-  ignoreHTTPSErrors: true,
+  // slowMo: 120,
+  // defaultViewport: null,
+  // ignoreHTTPSErrors: true,
   userDataDir: "./tmp",
+  defaultViewport: {
+    width: 1648,
+    height: 1099,
+  },
 };
 
 const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
@@ -135,11 +145,6 @@ void (async () => {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      console.log("start");
-      await page.screenshot({
-        type: "png",
-        path: `hh.png`,
-      });
       await pause(random(0, 2e4));
 
       const imageBuffer = (await page.screenshot({
@@ -153,21 +158,25 @@ void (async () => {
       // ***
       // Проверяем наличие CPU ошибки
       // ***
-      const cpuErrorPlace = image.clone().crop(400, 420, 850, 170);
+      const cpuErrorPlace = image.clone().crop(400, 420 + 25 - 2, 850, 170);
       // cpuErrorPlace.write("assets/cpu-error.png");
       const cpuError = await Jimp.read("./assets/cpu-error.png");
 
       const distanceCpuError = Jimp.distance(cpuErrorPlace, cpuError);
       const diffCpuError = Jimp.diff(cpuErrorPlace, cpuError).percent;
 
+      console.log("CPU error detected", distanceCpuError, diffCpuError);
       if (distanceCpuError < TOLERANCE && diffCpuError < TOLERANCE) {
         console.log("CPU error detected");
 
-        await cursor.moveTo({ x: random(1235, 1260), y: random(284, 310) });
+        await cursor.moveTo({
+          x: random(1235, 1260),
+          y: random(284 + 25 - 2, 310 + 25 - 2),
+        });
         await cursor.click();
 
-        const pauseTime = random(60 * 60, 60 * 60 * 4);
-        console.log(`Pause: ${pauseTime}sec`);
+        const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
+        console.log(`Pause: ${pauseTime / 1000}sec`);
         await pause(pauseTime);
         continue;
       }
@@ -175,21 +184,25 @@ void (async () => {
       // ***
       // Проверяем наличие другой CPU ошибки
       // ***
-      const cpuError2Place = image.clone().crop(400, 400, 850, 170);
+      const cpuError2Place = image.clone().crop(400, 400 + 25 - 2, 850, 170);
       // cpuError2Place.write("assets/cpu-error2.png");
       const cpuError2 = await Jimp.read("./assets/cpu-error2.png");
 
       const distanceCpuError2 = Jimp.distance(cpuError2Place, cpuError2);
       const diffCpuError2 = Jimp.diff(cpuError2Place, cpuError2).percent;
 
+      console.log("CPU error detected2", distanceCpuError2, diffCpuError2);
       if (distanceCpuError2 < TOLERANCE && diffCpuError2 < TOLERANCE) {
         console.log("CPU error detected");
 
-        await cursor.moveTo({ x: random(1230, 1265), y: random(260, 280) });
+        await cursor.moveTo({
+          x: random(1230, 1265),
+          y: random(260 + 25 - 2, 280 + 25 - 2),
+        });
         await cursor.click();
 
-        const pauseTime = random(60 * 60, 60 * 60 * 4);
-        console.log(`Pause: ${pauseTime}sec`);
+        const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
+        console.log(`Pause: ${pauseTime / 1000}sec`);
         await pause(pauseTime);
         continue;
       }
@@ -197,17 +210,19 @@ void (async () => {
       // ***
       // Проверяем нужно ли войти
       // ***
-      const loginBtnPlace = image.clone().crop(740, 748, 160, 65);
+      const loginBtnPlace = image.clone().crop(740, 725 + 25 - 2, 160, 65);
       const loginBtn = await Jimp.read("./assets/login-btn.png");
 
       const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
       const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
 
-      console.log("---", distanceLoginBtn, diffLoginBtn);
-
+      console.log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
         console.log("Click Login Page");
-        await cursor.moveTo({ x: random(780, 810), y: random(730, 740) });
+        await cursor.moveTo({
+          x: random(780, 810),
+          y: random(730 + 25 - 2, 740 + 25 - 2),
+        });
         await cursor.click();
         numberOfEmptyPasses = 0;
         continue;
@@ -216,16 +231,20 @@ void (async () => {
       // ***
       // Проверяем нужно ли перейти на экран майнинга
       // ***
-      const mineBtnPlace = image.clone().crop(1235, 315, 250, 55);
+      const mineBtnPlace = image.clone().crop(1235, 315 + 25 - 2, 250, 55);
       // mineBtnPlace.write("assets/mine-btn.png");
       const mineBtn = await Jimp.read("./assets/mine-btn.png");
 
       const distanceMineBtn = Jimp.distance(mineBtnPlace, mineBtn);
       const diffMineBtn = Jimp.diff(mineBtnPlace, mineBtn).percent;
 
+      console.log("Go to Mine", distanceMineBtn, diffMineBtn);
       if (distanceMineBtn < 0.1 && diffMineBtn < 0.1) {
         console.log("Go to Mine");
-        await cursor.moveTo({ x: random(1240, 1270), y: random(320, 335) });
+        await cursor.moveTo({
+          x: random(1240, 1270),
+          y: random(320 + 25 - 2, 335 + 25 - 2),
+        });
         await cursor.click();
         numberOfEmptyPasses = 0;
         continue;
@@ -234,7 +253,7 @@ void (async () => {
       // ***
       // Проверяем можно ли майнить
       // ***
-      const mineStartBtnPlace = image.clone().crop(740, 880, 160, 45);
+      const mineStartBtnPlace = image.clone().crop(740, 880 + 25 - 2, 160, 45);
       // mineStartBtnPlace.write("assets/mine-start-btn.png");
       const mineStartBtn = await Jimp.read("./assets/mine-start-btn.png");
 
@@ -247,9 +266,13 @@ void (async () => {
         mineStartBtn
       ).percent;
 
+      // console.log("Start Mine", distanceMineStartBtn, diffmineStartBtn);
       if (distanceMineStartBtn < 0.1 && diffmineStartBtn < 0.1) {
         console.log("Start Mine");
-        await cursor.moveTo({ x: random(745, 760), y: random(910, 940) });
+        await cursor.moveTo({
+          x: random(745, 760),
+          y: random(910 + 25 - 2, 940 + 25 - 2),
+        });
         await cursor.click();
         numberOfEmptyPasses = 0;
         continue;
@@ -258,7 +281,7 @@ void (async () => {
       // ***
       // Проверяем можно ли собрать монеты
       // ***
-      const claimOldBtnPlace = image.clone().crop(735, 880, 170, 45);
+      const claimOldBtnPlace = image.clone().crop(735, 880 + 25 - 2, 170, 45);
       // claimOldBtnPlace.write("assets/claim-old-btn.png");
       const claimOldBtn = await Jimp.read("./assets/claim-old-btn.png");
 
@@ -268,9 +291,13 @@ void (async () => {
         claimOldBtn
       ).percent;
 
+      // console.log("Get old Claim", distanceClaimOldBtn, diffmineClaimOldBtn);
       if (distanceClaimOldBtn < 0.1 && diffmineClaimOldBtn < 0.1) {
         console.log("Get old Claim");
-        await cursor.moveTo({ x: random(740, 780), y: random(890, 915) });
+        await cursor.moveTo({
+          x: random(740, 780),
+          y: random(890 + 25 - 2, 915 + 25 - 2),
+        });
 
         const popup: Page = await new Promise((res) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -290,7 +317,9 @@ void (async () => {
       // ***
       // После сбора возвращаемся обратно
       // ***
-      const backToMiningHubBtnPlace = image.clone().crop(320, 805, 240, 45);
+      const backToMiningHubBtnPlace = image
+        .clone()
+        .crop(320, 805 + 25 - 2, 240, 45);
       // backToMiningHubBtnPlace.write("assets/back-to-mining-hub-btn.png");
       const backToMiningHubBtn = await Jimp.read(
         "./assets/back-to-mining-hub-btn.png"
@@ -305,13 +334,21 @@ void (async () => {
         backToMiningHubBtn
       ).percent;
 
+      // console.log(
+      //   "Back to Mining",
+      //   distanceBackToMiningHubBtn,
+      //   diffClaimBackToMiningHubBtn
+      // );
       if (
         distanceBackToMiningHubBtn < TOLERANCE &&
         diffClaimBackToMiningHubBtn < TOLERANCE
       ) {
         console.log("Back to Mining");
 
-        await cursor.moveTo({ x: random(330, 350), y: random(815, 835) });
+        await cursor.moveTo({
+          x: random(330, 350),
+          y: random(815 + 25 - 2, 835 + 25 - 2),
+        });
 
         await cursor.click();
 
@@ -322,16 +359,20 @@ void (async () => {
       // ***
       // Проверяем можно ли собрать монеты
       // ***
-      const claimBtnPlace = image.clone().crop(590, 625, 170, 40);
+      const claimBtnPlace = image.clone().crop(590, 625 + 25 - 2, 170, 40);
       // claimBtnPlace.write("assets/claim-btn.png");
       const claimtBtn = await Jimp.read("./assets/claim-btn.png");
 
       const distanceClaimBtn = Jimp.distance(claimBtnPlace, claimtBtn);
       const diffClaimBtn = Jimp.diff(claimBtnPlace, claimtBtn).percent;
 
+      // console.log("Clain", distanceClaimBtn, diffClaimBtn);
       if (distanceClaimBtn < TOLERANCE && diffClaimBtn < TOLERANCE) {
         console.log("Clain");
-        await cursor.moveTo({ x: random(590, 610), y: random(625, 645) });
+        await cursor.moveTo({
+          x: random(590, 610),
+          y: random(625 + 25 - 2, 645 + 25 - 2),
+        });
 
         const popup: Page = await new Promise((res) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -349,7 +390,7 @@ void (async () => {
       }
 
       ++numberOfEmptyPasses;
-      if (numberOfEmptyPasses > 50) {
+      if (numberOfEmptyPasses > 70) {
         await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
         numberOfEmptyPasses = 0;
       }
