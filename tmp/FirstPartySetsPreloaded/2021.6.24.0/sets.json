@@ -1,0 +1,22 @@
+[
+    {
+        "owner": "https://seznam.cz",
+        "members": ["https://garaz.cz", "https://prozeny.cz"]
+    },
+    {
+        "owner": "https://costargroup.com",
+        "members": ["https://costar.com"]
+    },
+    {
+        "owner": "https://people.com",
+        "members": ["https://bhg.com", "https://southernliving.com", "https://allrecipes.com", "https://ipp-meredith.com"]
+    },
+    {
+        "owner": "https://gemius.com",
+        "members": ["https://gemius.pl", "https://adocean-global.com"]
+    },
+    {
+        "owner": "https://nine.com.au",
+        "members": ["https://9news.com.au", "https://9now.com.au", "https://smh.com.au", "https://theage.com.au"]
+    }
+]
