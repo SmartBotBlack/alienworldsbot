@@ -27,15 +27,9 @@ function getUserAgent() {
 }
 
 const args = [
-  // "--no-sandbox",
-  // "--disable-setuid-sandbox",
-  // "--disable-infobars",
-  // "--window-position=0,0",
-  // "--ignore-certifcate-errors",
-  // "--ignore-certifcate-errors-spki-list",
+  "--window-position=0,0",
+  // ...
   "--window-size=1680,1220",
-  // "--disable-infobars",
-  // '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3312.0 Safari/537.36"',
   "--disable-gpu",
   "--no-sandbox",
   "--enable-features=NetworkService,NetworkServiceInProcess",
@@ -46,6 +40,12 @@ const args = [
   "--user-agent=" + getUserAgent(),
   "--ignore-certifcate-errors",
   "--ignore-certifcate-errors-spki-list",
+  // ...
+  "--single-process",
+  "--disable-accelerated-2d-canvas",
+  "--no-first-run",
+  "--no-zygote",
+  "--force-gpu-mem-available-mb=1024",
 ];
 
 let options = {
@@ -360,13 +360,6 @@ const task = async (
 
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
-        const pages = await browser.pages();
-        for (const anotherPage of pages) {
-          await anotherPage.screenshot({
-            type: "png",
-            path: `./errors/${new Date().toString()}-${await anotherPage.title()}.png`,
-          });
-        }
         await page.reload();
         numberOfEmptyPasses = 0;
       }
