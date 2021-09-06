@@ -81,6 +81,7 @@ const getPage = async (
   const browser = await puppeteer.launch(options);
 
   const page = (await browser.pages())[0];
+  // page.setDefaultNavigationTimeout(0);
 
   if (proxyAuth && proxyHost) {
     const [username, password] = proxyAuth.split(":");
@@ -93,7 +94,7 @@ const getPage = async (
 
   await page.goto("https://play.alienworlds.io/", {
     waitUntil: "networkidle2",
-    timeout: 0,
+    // timeout: 0,
   });
 
   return { page, browser, cursor };
@@ -112,8 +113,18 @@ const browserSleep = async (
 ): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
   log(`Browser sleep: ${pauseTime / 1000}sec`);
 
-  await oldPage.close();
-  await oldBrowser.close();
+  try {
+    await oldPage.close();
+  } catch (e) {
+    console.log("Can't close page");
+    console.error(e);
+  }
+  try {
+    await oldBrowser.close();
+  } catch (e) {
+    console.log("Can't close browser");
+    console.error(e);
+  }
   await pause(pauseTime);
 
   log("Browser run");
@@ -457,15 +468,30 @@ const task = async (
     } catch (error: any) {
       log("Throw Error");
       log(error);
-      const pages = await browser.pages();
-      for (const anotherPage of pages) {
-        await anotherPage.screenshot({
-          type: "png",
-          path: `./errors/${new Date().toString()}-${await anotherPage.title()}.png`,
-        });
+      try {
+        const pages = await browser.pages();
+        for (const anotherPage of pages) {
+          await anotherPage.screenshot({
+            type: "png",
+            path: `./errors/${new Date().toString()}-${await anotherPage.title()}.png`,
+          });
+        }
+      } catch (e) {
+        log("Can't take screenshot");
+        console.error(e);
       }
 
-      await page.reload();
+      // await page.reload();
+      ({ browser, page, cursor } = await browserSleep(
+        1e4,
+        browser,
+        page,
+        options,
+        cookies,
+        log,
+        proxyAuth,
+        proxyHost
+      ));
       numberOfEmptyPasses = 0;
     }
   }
