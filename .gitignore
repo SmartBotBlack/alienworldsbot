@@ -3,6 +3,7 @@ screenshots
 tmp
 proxies.txt
 accounts
+errors
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 

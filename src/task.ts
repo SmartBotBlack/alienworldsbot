@@ -88,7 +88,8 @@ const task = async (
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const browser = await puppeteer.launch(options);
-  const page = await browser.newPage();
+  // const page = await browser.newPage();
+  const page = (await browser.pages())[0];
 
   // await page.setRequestInterception(true);
 
@@ -121,6 +122,7 @@ const task = async (
       })) as Buffer;
 
       const image = await Jimp.read(imageBuffer);
+      image.write(`./tmp/${name}.png`);
 
       // ***
       // Проверяем наличие CPU ошибки
@@ -356,13 +358,16 @@ const task = async (
         continue;
       }
 
-      await page.screenshot({
-        path: `./tmp/${name}.png`,
-      });
-
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
-        await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+        const pages = await browser.pages();
+        for (const anotherPage of pages) {
+          await anotherPage.screenshot({
+            type: "png",
+            path: `./errors/${new Date().toString()}-${await anotherPage.title()}.png`,
+          });
+        }
+        await page.reload();
         numberOfEmptyPasses = 0;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -377,7 +382,7 @@ const task = async (
         });
       }
 
-      await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+      await page.reload();
       numberOfEmptyPasses = 0;
     }
   }
