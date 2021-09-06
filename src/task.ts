@@ -356,6 +356,10 @@ const task = async (
         continue;
       }
 
+      await page.screenshot({
+        path: `./tmp/${name}.png`,
+      });
+
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
         await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
