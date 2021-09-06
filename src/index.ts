@@ -37,12 +37,14 @@ void (async () => {
   const files = readFilesSync("./accounts");
 
   await Promise.all(
-    files.map((file, index) => {
+    files.map(async (file, index) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unnecessary-type-assertion
       const content = JSON.parse(
         fs.readFileSync(file.filepath, "utf-8")
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ) as any;
+
+      await new Promise((res) => setTimeout(res, 3e4 * index));
 
       return task(
         file.name + file.ext,

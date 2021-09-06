@@ -1,5 +1,4 @@
 import puppeteer from "puppeteer-extra";
-import useProxy from "puppeteer-page-proxy";
 
 const args = [
   "--window-size=1680,1220",
@@ -41,7 +40,6 @@ const options = {
   page.goto("https://2ip.ru/", {});
 
   const page2 = await browser.newPage();
-  await useProxy(page2, "http://127.0.0.1:80");
   page2.goto("https://2ip.ru/", {});
 
   //   for (let i = 0; i < 30; ++i) {

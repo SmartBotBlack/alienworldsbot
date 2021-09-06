@@ -1,6 +1,6 @@
-import { Page, Protocol } from "puppeteer";
+import { Page, Protocol, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
-import { createCursor } from "ghost-cursor";
+import { createCursor, GhostCursor } from "ghost-cursor";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import Jimp from "jimp/es";
 
@@ -68,6 +68,65 @@ const random = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
+const getPage = async (
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  options: Object,
+  cookies: Protocol.Network.CookieParam[],
+  log: (str: string) => void,
+  proxyAuth?: string,
+  proxyHost?: string
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const browser = await puppeteer.launch(options);
+
+  const page = (await browser.pages())[0];
+
+  if (proxyAuth && proxyHost) {
+    const [username, password] = proxyAuth.split(":");
+    await page.authenticate({ username, password });
+    log(`Use proxy ${proxyAuth}@${proxyHost}`);
+  }
+  await page.setCookie(...cookies);
+
+  const cursor = createCursor(page);
+
+  await page.goto("https://play.alienworlds.io/", {
+    waitUntil: "networkidle2",
+    timeout: 0,
+  });
+
+  return { page, browser, cursor };
+};
+
+const browserSleep = async (
+  pauseTime: number,
+  oldBrowser: Browser,
+  oldPage: Page,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  options: Object,
+  cookies: Protocol.Network.CookieParam[],
+  log: (str: string) => void,
+  proxyAuth?: string,
+  proxyHost?: string
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
+  log(`Browser sleep: ${pauseTime / 1000}sec`);
+
+  await oldPage.close();
+  await oldBrowser.close();
+  await pause(pauseTime);
+
+  log("Browser run");
+  const { browser, page, cursor } = await getPage(
+    options,
+    cookies,
+    log,
+    proxyAuth,
+    proxyHost
+  );
+  return { page, browser, cursor };
+};
+
 const task = async (
   name: string,
   cookies: Protocol.Network.CookieParam[],
@@ -85,29 +144,14 @@ const task = async (
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const browser = await puppeteer.launch(options);
-  // const page = await browser.newPage();
-  const page = (await browser.pages())[0];
+  let { browser, page, cursor } = await getPage(
+    options,
+    cookies,
+    log,
+    proxyAuth,
+    proxyHost
+  );
 
-  // await page.setRequestInterception(true);
-
-  if (proxyAuth && proxyHost) {
-    // await page.setExtraHTTPHeaders({
-    //   "Proxy-Authorization":
-    //     "Basic " + Buffer.from(proxyAuth).toString("base64"),
-    // });
-    const [username, password] = proxyAuth.split(":");
-    await page.authenticate({ username, password });
-    log(`Use proxy ${proxyAuth}@${proxyHost}`);
-  }
-  await page.setCookie(...cookies);
-  const cursor = createCursor(page);
-
-  await page.goto("https://play.alienworlds.io/", {
-    waitUntil: "networkidle2",
-  });
   let numberOfEmptyPasses = 0;
 
   // eslint-disable-next-line no-constant-condition
@@ -145,8 +189,18 @@ const task = async (
         await cursor.click();
 
         const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-        log(`Pause: ${pauseTime / 1000}sec`);
-        await pause(pauseTime);
+
+        ({ browser, page, cursor } = await browserSleep(
+          pauseTime,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));
+
         continue;
       }
 
@@ -171,8 +225,20 @@ const task = async (
         await cursor.click();
 
         const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-        log(`Pause: ${pauseTime / 1000}sec`);
-        await pause(pauseTime);
+        // log(`Pause: ${pauseTime / 1000}sec`);
+        // await pause(pauseTime);
+
+        ({ browser, page, cursor } = await browserSleep(
+          pauseTime,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));
+
         continue;
       }
 
@@ -244,6 +310,7 @@ const task = async (
         });
         await cursor.click();
         numberOfEmptyPasses = 0;
+
         continue;
       }
 
@@ -314,12 +381,25 @@ const task = async (
       ) {
         log("Back to Mining");
 
-        await cursor.moveTo({
-          x: random(330, 350),
-          y: random(815 + 25 - 2, 835 + 25 - 2),
-        });
+        // await cursor.moveTo({
+        //   x: random(330, 350),
+        //   y: random(815 + 25 - 2, 835 + 25 - 2),
+        // });
 
-        await cursor.click();
+        // await cursor.click();
+
+        // await pause(1e4);
+
+        ({ browser, page, cursor } = await browserSleep(
+          (13 * 60 - 30) * 1000,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));
 
         numberOfEmptyPasses = 0;
         continue;
@@ -360,7 +440,17 @@ const task = async (
 
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
-        await page.reload();
+        ({ browser, page, cursor } = await browserSleep(
+          6e4,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));
+
         numberOfEmptyPasses = 0;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
