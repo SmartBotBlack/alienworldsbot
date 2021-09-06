@@ -1,6 +1,8 @@
 dist
 screenshots
 tmp
+proxies.txt
+accounts
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 
