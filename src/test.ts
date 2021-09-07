@@ -1,4 +1,16 @@
 import puppeteer from "puppeteer-extra";
+import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
+
+puppeteer.use(
+  // eslint-disable-next-line new-cap
+  RecaptchaPlugin({
+    provider: {
+      id: "2captcha",
+      token: "8d19b37d81678b3bd0c2897c025e6ab3", // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
+    },
+    visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
+  })
+);
 
 const args = [
   "--window-size=1680,1220",
@@ -12,7 +24,7 @@ const args = [
   "--ignore-certifcate-errors",
   "--ignore-certifcate-errors-spki-list",
   // ...
-  "--single-process",
+  // "--single-process",
   "--disable-accelerated-2d-canvas",
   "--no-first-run",
   "--no-zygote",
@@ -33,14 +45,25 @@ const options = {
   },
 };
 
-(async () => {
+void (async () => {
   const browser = await puppeteer.launch(options);
 
   const page = await browser.newPage();
-  page.goto("https://2ip.ru/", {});
+  await page.goto("http://democaptcha.com/demo-form-eng/hcaptcha.html", {});
 
-  const page2 = await browser.newPage();
-  page2.goto("https://2ip.ru/", {});
+  const iframes = await page.$$("iframe");
+
+  for (const iframe of iframes) {
+    const srcSource = await iframe.getProperty("src");
+    if (srcSource) {
+      const src: string = await srcSource.jsonValue();
+      if (src?.includes("hcaptcha")) {
+        console.log("iframe", src);
+        await page.solveRecaptchas();
+        break;
+      }
+    }
+  }
 
   //   for (let i = 0; i < 30; ++i) {
   //     console.log("start " + i);
