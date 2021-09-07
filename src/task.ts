@@ -2,9 +2,20 @@ import { Page, Protocol, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import { createCursor, GhostCursor } from "ghost-cursor";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import Jimp from "jimp/es";
 
 puppeteer.use(StealthPlugin());
+puppeteer.use(
+  // eslint-disable-next-line new-cap
+  RecaptchaPlugin({
+    provider: {
+      id: "2captcha",
+      token: "8d19b37d81678b3bd0c2897c025e6ab3", // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
+    },
+    visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
+  })
+);
 
 const TOLERANCE = 0.1;
 
@@ -41,18 +52,21 @@ const args = [
   "--ignore-certifcate-errors",
   "--ignore-certifcate-errors-spki-list",
   // ...
-  "--single-process",
+  // "--single-process",
   "--disable-accelerated-2d-canvas",
   "--no-first-run",
   "--no-zygote",
   "--force-gpu-mem-available-mb=1024",
+  // ..
+  "--disable-web-security",
+  "--disable-features=site-per-process",
 ];
 
-let options = {
+const options = {
   args,
   ignoreDefaultArgs: ["--enable-automation"],
   headless: true,
-  slowMo: 120,
+  slowMo: 20,
   // defaultViewport: null,
   ignoreHTTPSErrors: true,
   // userDataDir: "./tmp",
@@ -81,6 +95,7 @@ const getPage = async (
   const browser = await puppeteer.launch(options);
 
   const page = (await browser.pages())[0];
+  // const page = await browser.newPage();
   // page.setDefaultNavigationTimeout(0);
 
   if (proxyAuth && proxyHost) {
@@ -94,7 +109,7 @@ const getPage = async (
 
   await page.goto("https://play.alienworlds.io/", {
     waitUntil: "networkidle2",
-    // timeout: 0,
+    timeout: 0,
   });
 
   return { page, browser, cursor };
@@ -113,18 +128,9 @@ const browserSleep = async (
 ): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
   log(`Browser sleep: ${pauseTime / 1000}sec`);
 
-  try {
-    await oldPage.close();
-  } catch (e) {
-    console.log("Can't close page");
-    console.error(e);
-  }
-  try {
-    await oldBrowser.close();
-  } catch (e) {
-    console.log("Can't close browser");
-    console.error(e);
-  }
+  await oldPage.close();
+  await oldBrowser.close();
+
   await pause(pauseTime);
 
   log("Browser run");
@@ -146,17 +152,19 @@ const task = async (
   const log = (info: string) => console.log(name + ": " + info);
   log("Run!");
 
+  let newOptions = { ...options };
+
   let proxyAuth, proxyHost;
   if (proxy) {
     [proxyAuth, proxyHost] = proxy.split("@");
-    options = {
-      ...options,
-      args: [...options.args, `--proxy-server=${proxyHost}`],
+    newOptions = {
+      ...newOptions,
+      args: [...newOptions.args, `--proxy-server=${proxyHost}`],
     };
   }
 
   let { browser, page, cursor } = await getPage(
-    options,
+    newOptions,
     cookies,
     log,
     proxyAuth,
@@ -168,7 +176,7 @@ const task = async (
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      await pause(random(0, 2e4));
+      await pause(random(0, 1e4));
 
       const imageBuffer = (await page.screenshot({
         type: "png",
@@ -402,7 +410,7 @@ const task = async (
         // await pause(1e4);
 
         ({ browser, page, cursor } = await browserSleep(
-          (13 * 60 - 30) * 1000,
+          random(13 * 60 - 30, 13 * 60 - 100) * 1000,
           browser,
           page,
           options,
@@ -452,7 +460,7 @@ const task = async (
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
         ({ browser, page, cursor } = await browserSleep(
-          6e4,
+          random(6e4, 18e4),
           browser,
           page,
           options,
