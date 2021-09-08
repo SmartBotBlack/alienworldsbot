@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --outDir dist",
+    "build": "rm -rf ./dist/* && tsc",
     "build:watch": "npm run build -- --watch",
     "serve": "node dist/index.js",
     "serve:watch": "nodemon dist/index.js",
@@ -17,6 +17,7 @@
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
     "concurrently": "^6.2.1",
+    "esbuild": "^0.12.25",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "nodemon": "^2.0.12",

@@ -29,10 +29,15 @@ function readFilesSync(dir: string) {
 }
 
 void (async () => {
-  const proxies = fs
-    .readFileSync("proxies.txt", "utf-8")
-    .split(/\r?\n/)
-    .filter(Boolean);
+  let proxies: string[] = [];
+  try {
+    proxies = fs
+      .readFileSync("proxies.txt", "utf-8")
+      .split(/\r?\n/)
+      .filter(Boolean);
+  } catch (e) {
+    console.log("Proxies not found!");
+  }
 
   const files = readFilesSync("./accounts");
 

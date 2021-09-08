@@ -4,6 +4,7 @@ tmp
 proxies.txt
 accounts
 errors
+bundle
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 

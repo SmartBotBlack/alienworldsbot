@@ -178,6 +178,20 @@ const task = async (
     try {
       await pause(random(0, 1e4));
 
+      // Проверяем наличие капчи, и если она есть, то решаем её
+      const iframes = await page.$$("iframe");
+      for (const iframe of iframes) {
+        const srcSource = await iframe.getProperty("src");
+        if (srcSource) {
+          const src: string = await srcSource.jsonValue();
+          if (src?.includes("hcaptcha")) {
+            log("Captcha Detected");
+            await page.solveRecaptchas();
+            break;
+          }
+        }
+      }
+
       const imageBuffer = (await page.screenshot({
         type: "png",
         fullPage: true,
