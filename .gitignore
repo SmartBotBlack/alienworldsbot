@@ -3,6 +3,7 @@ screenshots
 tmp
 proxies.txt
 errors
+bundle
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 
