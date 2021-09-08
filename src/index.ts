@@ -41,8 +41,6 @@ void (async () => {
 
   const files = readFilesSync("./accounts");
 
-  console.log("files", files);
-
   await Promise.all(
     files.map(async (file, index) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unnecessary-type-assertion
