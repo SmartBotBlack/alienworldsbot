@@ -50,11 +50,11 @@ void (async () => {
       ) as any;
 
       
-      const data = fs.readFileSync("./logpas/account.txt", "utf-8").split(';');
+      const data = fs.readFileSync("./autf/account.txt", "utf-8").split(';');
       const username: string = data[0];
       const password: string = data[1];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      
+      //
 
       await new Promise((res) => setTimeout(res, 3e4 * index));
 

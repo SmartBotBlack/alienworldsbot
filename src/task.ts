@@ -194,7 +194,7 @@ const task = async (
           }
         }
       }
-
+//
       const imageBuffer = (await page.screenshot({
         type: "png",
         fullPage: true,
@@ -203,7 +203,7 @@ const task = async (
 
       const image = await Jimp.read(imageBuffer);
       image.write(`./tmp/${name}.png`);
-
+      //
       // ***
       // Проверяем наличие CPU ошибки
       // ***
