@@ -65,7 +65,7 @@ const args = [
 const options = {
   args,
   ignoreDefaultArgs: ["--enable-automation"],
-  headless: true,
+  headless: false,
   slowMo: 20,
   // defaultViewport: null,
   ignoreHTTPSErrors: true,
@@ -103,7 +103,8 @@ const getPage = async (
     await page.authenticate({ username, password });
     log(`Use proxy ${proxyAuth}@${proxyHost}`);
   }
-  await page.setCookie(...cookies);
+  // Отключил подгрузку куков для проверки авторизации через лок пасс
+  //await page.setCookie(...cookies);
 
   const cursor = createCursor(page);
 
@@ -145,6 +146,8 @@ const browserSleep = async (
 };
 
 const task = async (
+  username1: string,
+  password1: string,
   name: string,
   cookies: Protocol.Network.CookieParam[],
   proxy?: string
@@ -377,6 +380,19 @@ const task = async (
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
         if (button) await button.click();
+        console.log('Это логин:', username1);
+        
+
+        const autf = await popup.waitForSelector("input[name='[userName]'");
+        if (autf){
+        await new Promise(r => setTimeout(r, 2000));
+        await page.focus('input[name="userName"');
+        await page.keyboard.type(username1);
+        await new Promise(r => setTimeout(r, 2000));
+        await page.focus('input[name="password"');
+        await page.keyboard.type(password1);
+        await page.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
+        }
         log("Approve Wax");
 
         numberOfEmptyPasses = 0;
