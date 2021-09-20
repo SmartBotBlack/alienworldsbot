@@ -103,11 +103,12 @@ const getPage = async (
     await page.authenticate({ username, password });
     log(`Use proxy ${proxyAuth}@${proxyHost}`);
   }
+
   // Отключил подгрузку куков для проверки авторизации через лок пасс
   //await page.setCookie(...cookies);
 
   const cursor = createCursor(page);
-
+  
   await page.goto("https://play.alienworlds.io/", {
     waitUntil: "networkidle2",
     timeout: 0,
@@ -176,10 +177,25 @@ const task = async (
 
   let numberOfEmptyPasses = 0;
 
+  //Авторизация по логину и паролю
+  const pageLogin = await browser.newPage();
+  await pageLogin.goto('https://all-access.wax.io/');
+  await pageLogin.waitForSelector("input[name='userName']");
+  await new Promise(r => setTimeout(r, 2000));
+  await pageLogin.focus('input[name="userName"]');
+  await pageLogin.keyboard.type(username1);
+  await new Promise(r => setTimeout(r, 2000));
+  await pageLogin.focus('input[name="password"]');
+  await pageLogin.keyboard.type(password1);
+  await pageLogin.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
+  await new Promise(r => setTimeout(r, 6000));
+  await pageLogin.close();
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       await pause(random(0, 1e4));
+
 
       // Проверяем наличие капчи, и если она есть, то решаем её
       const iframes = await page.$$("iframe");
@@ -286,6 +302,7 @@ const task = async (
 
       const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
       const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
+      
 
       // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
@@ -296,7 +313,7 @@ const task = async (
         });
         await cursor.click();
         numberOfEmptyPasses = 0;
-        continue;
+        continue
       }
 
       // ***
@@ -377,22 +394,10 @@ const task = async (
           void cursor.click();
         });
 
+
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
         if (button) await button.click();
-        console.log('Это логин:', username1);
-        
-
-        const autf = await popup.waitForSelector("input[name='[userName]'");
-        if (autf){
-        await new Promise(r => setTimeout(r, 2000));
-        await page.focus('input[name="userName"');
-        await page.keyboard.type(username1);
-        await new Promise(r => setTimeout(r, 2000));
-        await page.focus('input[name="password"');
-        await page.keyboard.type(password1);
-        await page.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
-        }
         log("Approve Wax");
 
         numberOfEmptyPasses = 0;
