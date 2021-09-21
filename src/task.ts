@@ -38,7 +38,7 @@ function getUserAgent() {
   return USER_AGENT_LINUX;
 }
 
-const argss = [
+const args = [
   "--window-position=0,0",
   // ...
   "--window-size=1680,1220",
@@ -64,7 +64,7 @@ const argss = [
 ];
 
 const options = {
-  argss,
+  args,
   ignoreDefaultArgs: ["--enable-automation"],
   headless: false,
   slowMo: 20,
@@ -164,7 +164,7 @@ const task = async (
     [proxyAuth, proxyHost] = proxy.split("@");
     newOptions = {
       ...newOptions,
-      argss: [...newOptions.argss, `--proxy-server=${proxyHost}`],
+      args: [...newOptions.args, `--proxy-server=${proxyHost}`],
     };
   }
 
