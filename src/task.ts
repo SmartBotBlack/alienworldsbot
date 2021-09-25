@@ -315,9 +315,6 @@ const task = async (
       const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
       const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
 
-      console.log("distanceLoginBtn", distanceLoginBtn);
-      console.log("diffLoginBtn", diffLoginBtn);
-
       // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
         log("Click Login Page");
