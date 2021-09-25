@@ -17,7 +17,6 @@ puppeteer.use(
   })
 );
 
-let matches: number;
 const TOLERANCE = 0.1;
 
 const USER_AGENT_MAC =
@@ -61,20 +60,22 @@ const args = [
   // ..
   "--disable-web-security",
   "--disable-features=site-per-process",
+  "--no-default-browser-check",
+  "--test-type",
 ];
 
 const options = {
   args,
-  ignoreDefaultArgs: ["--enable-automation"],
+  ignoreDefaultArgs: [
+    "--enable-automation",
+    "--enable-blink-features=IdleDetection",
+  ],
   headless: false,
   slowMo: 20,
   // defaultViewport: null,
   ignoreHTTPSErrors: true,
   // userDataDir: "./tmp",
-  defaultViewport: {
-    width: 1648,
-    height: 1099,
-  },
+  defaultViewport: null,
 };
 
 const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
@@ -300,21 +301,6 @@ const task = async (
         // если не использовать таймаут, то страница авторизации будет открываться два раза, что поломает бота
         await new Promise((r) => setTimeout(r, 4000));
 
-        // Ищем время до начала повторной копки
-
-        page.on("console", (msg) => {
-          for (let i = 0; i < msg.args().length; ++i)
-            //console.log(`${msg.args()[i]}`,`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine'), typeof(`${msg.args()[i]}`));
-            if (
-              `${msg.args()[i]}`.indexOf("JSHandle:ms until next mine") == 0
-            ) {
-              // const a = `${msg.args()[i]}`;
-              // console.log('It is parametr a: ', a);
-              matches = +`${msg.args()[i]}`.match(/\d+/g);
-              console.log("ms until next mine: ", matches);
-            }
-        });
-
         numberOfEmptyPasses = 0;
         continue;
       }
@@ -447,7 +433,7 @@ const task = async (
         // await pause(1e4);
 
         ({ browser, page, cursor } = await browserSleep(
-          matches - 100000,
+          12 * 60 * 1e3,
           browser,
           page,
           options,
@@ -489,6 +475,32 @@ const task = async (
         const button = await popup.$(".react-ripples button");
         if (button) await button.click();
         log("Approve Wax");
+
+        const sleepTime = await new Promise<number>((res) => {
+          page.on("console", (msg) => {
+            const args = msg.args();
+
+            for (const arg of args) {
+              const message = arg.toString();
+              if (message.indexOf("JSHandle:ms until next mine") == 0) {
+                res(+(message.match(/\d+/g) || 0));
+              }
+            }
+          });
+        });
+
+        log(`ms until next mine: ${sleepTime}`);
+
+        ({ browser, page, cursor } = await browserSleep(
+          sleepTime - 60 * 1e3,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));
 
         numberOfEmptyPasses = 0;
         continue;
