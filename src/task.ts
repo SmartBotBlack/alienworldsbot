@@ -95,15 +95,14 @@ let depth = 0;
 const callbacks: ((func: () => void) => void)[] = [];
 const updateMutex = () => {
   if (depth < config.maximumNumberOfRunningBrowsers) {
-    console.log("++depth");
-    ++depth;
     const callback = callbacks.shift();
-    if (callback)
+    if (callback) {
+      ++depth;
       callback(() => {
-        console.log("--depth");
         --depth;
         updateMutex();
       });
+    }
   }
 };
 const mutex: TMutex = () =>

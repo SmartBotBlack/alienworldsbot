@@ -40,9 +40,9 @@ void (async () => {
   }
 
   let files = readFilesSync("./accounts");
-  if (process.env.NODE_ENV === "development") {
-    files = files.slice(0, 1);
-  }
+  // if (process.env.NODE_ENV === "development") {
+  //   files = files.slice(0, 1);
+  // }
 
   await Promise.all(
     files.map(async (file, index) => {
