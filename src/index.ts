@@ -39,7 +39,10 @@ void (async () => {
     console.log("Proxies not found!");
   }
 
-  const files = readFilesSync("./accounts");
+  let files = readFilesSync("./accounts");
+  if (process.env.NODE_ENV === "development") {
+    files = files.slice(0, 1);
+  }
 
   await Promise.all(
     files.map(async (file, index) => {
@@ -49,19 +52,9 @@ void (async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ) as any;
 
-      
-      const data = fs.readFileSync("./autf/account.txt", "utf-8");
-      const data1 = data.split(':');
-      const username1: string = data1[0];
-      const password1: string = data1[1];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      //
-
       await new Promise((res) => setTimeout(res, 3e4 * index));
 
       return task(
-        username1,
-        password1,
         file.name + file.ext,
         content,
         proxies[index] !== "none" ? proxies[index] : undefined

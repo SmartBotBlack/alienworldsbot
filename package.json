@@ -9,7 +9,7 @@
     "build:watch": "npm run build -- --watch",
     "serve": "node dist/index.js",
     "serve:watch": "nodemon dist/index.js",
-    "start": "concurrently \"npm run build:watch\" \"npm run serve:watch\"",
+    "start": "NODE_ENV=development concurrently \"npm run build:watch\" \"npm run serve:watch\"",
     "mine": "node ./dist/index.js"
   },
   "author": "voodee",

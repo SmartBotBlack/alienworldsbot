@@ -105,11 +105,10 @@ const getPage = async (
     log(`Use proxy ${proxyAuth}@${proxyHost}`);
   }
 
-  // Отключил подгрузку куков для проверки авторизации через лок пасс
-  //await page.setCookie(...cookies);
+  await page.setCookie(...cookies);
 
   const cursor = createCursor(page);
-  
+
   await page.goto("https://play.alienworlds.io/", {
     waitUntil: "networkidle2",
     timeout: 0,
@@ -148,8 +147,6 @@ const browserSleep = async (
 };
 
 const task = async (
-  username1: string,
-  password1: string,
   name: string,
   cookies: Protocol.Network.CookieParam[],
   proxy?: string
@@ -178,8 +175,6 @@ const task = async (
 
   let numberOfEmptyPasses = 0;
 
-  
-
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
@@ -197,7 +192,7 @@ const task = async (
           }
         }
       }
-//
+      //
       const imageBuffer = (await page.screenshot({
         type: "png",
         fullPage: true,
@@ -290,51 +285,38 @@ const task = async (
 
       const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
       const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
-      
 
       // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
-        console.log('Start login password authorization');
-        //Авторизация по логину и паролю
-        const pageLogin = await browser.newPage();
-        await pageLogin.goto('https://all-access.wax.io/');
-        await pageLogin.waitForSelector("input[name='userName']");
-        await new Promise(r => setTimeout(r, 2000));
-        await pageLogin.focus('input[name="userName"]');
-        await pageLogin.keyboard.type(username1);
-        await new Promise(r => setTimeout(r, 2000));
-        await pageLogin.focus('input[name="password"]');
-        await pageLogin.keyboard.type(password1);
-        await pageLogin.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
-        await new Promise(r => setTimeout(r, 6000));
-        await pageLogin.close();
+        console.log("Start login password authorization");
 
         log("Click Login Page");
         await cursor.moveTo({
           x: random(780, 810),
           y: random(730 + 25 - 2, 740 + 25 - 2),
         });
-        
+
         await cursor.click();
         // если не использовать таймаут, то страница авторизации будет открываться два раза, что поломает бота
-        await new Promise(r => setTimeout(r, 4000));
-        
+        await new Promise((r) => setTimeout(r, 4000));
 
-        // Ищем время до начала повторной копки 
+        // Ищем время до начала повторной копки
 
-        page.on('console', (msg) => {
+        page.on("console", (msg) => {
           for (let i = 0; i < msg.args().length; ++i)
-          //console.log(`${msg.args()[i]}`,`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine'), typeof(`${msg.args()[i]}`));
-            if (`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine') == 0){ 
+            //console.log(`${msg.args()[i]}`,`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine'), typeof(`${msg.args()[i]}`));
+            if (
+              `${msg.args()[i]}`.indexOf("JSHandle:ms until next mine") == 0
+            ) {
               // const a = `${msg.args()[i]}`;
               // console.log('It is parametr a: ', a);
               matches = +`${msg.args()[i]}`.match(/\d+/g);
-              console.log('ms until next mine: ', matches);
+              console.log("ms until next mine: ", matches);
             }
-        });        
-        
+        });
+
         numberOfEmptyPasses = 0;
-        continue
+        continue;
       }
 
       // ***
@@ -400,10 +382,9 @@ const task = async (
         claimOldBtnPlace,
         claimOldBtn
       ).percent;
- 
+
       // log("Get old Claim", distanceClaimOldBtn, diffmineClaimOldBtn);
       if (distanceClaimOldBtn < 0.1 && diffmineClaimOldBtn < 0.1) {
-
         log("Get old Claim");
         await cursor.moveTo({
           x: random(740, 780),
@@ -415,7 +396,6 @@ const task = async (
           browser.once("targetcreated", (target) => res(target.page()));
           void cursor.click();
         });
-
 
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
@@ -455,7 +435,6 @@ const task = async (
         distanceBackToMiningHubBtn < TOLERANCE &&
         diffClaimBackToMiningHubBtn < TOLERANCE
       ) {
-
         log("Back to Mining");
 
         // await cursor.moveTo({
@@ -468,7 +447,7 @@ const task = async (
         // await pause(1e4);
 
         ({ browser, page, cursor } = await browserSleep(
-          matches-100000,
+          matches - 100000,
           browser,
           page,
           options,
@@ -494,7 +473,6 @@ const task = async (
 
       // log("Clain", distanceClaimBtn, diffClaimBtn);
       if (distanceClaimBtn < TOLERANCE && diffClaimBtn < TOLERANCE) {
-
         log("Clain");
         await cursor.moveTo({
           x: random(590, 610),
