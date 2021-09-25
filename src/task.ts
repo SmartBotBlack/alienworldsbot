@@ -17,6 +17,7 @@ puppeteer.use(
   })
 );
 
+let matches: number;
 const TOLERANCE = 0.1;
 
 const USER_AGENT_MAC =
@@ -177,26 +178,12 @@ const task = async (
 
   let numberOfEmptyPasses = 0;
 
-  //Авторизация по логину и паролю
-  const pageLogin = await browser.newPage();
-  await pageLogin.goto('https://all-access.wax.io/');
-  await pageLogin.waitForSelector("input[name='userName']");
-  await new Promise(r => setTimeout(r, 2000));
-  await pageLogin.focus('input[name="userName"]');
-  await pageLogin.keyboard.type(username1);
-  await new Promise(r => setTimeout(r, 2000));
-  await pageLogin.focus('input[name="password"]');
-  await pageLogin.keyboard.type(password1);
-  await pageLogin.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
-  await new Promise(r => setTimeout(r, 6000));
-  await pageLogin.close();
+  
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       await pause(random(0, 1e4));
-
-
       // Проверяем наличие капчи, и если она есть, то решаем её
       const iframes = await page.$$("iframe");
       for (const iframe of iframes) {
@@ -297,6 +284,7 @@ const task = async (
       // ***
       // Проверяем нужно ли войти
       // ***
+
       const loginBtnPlace = image.clone().crop(740, 725 + 25 - 2, 160, 65);
       const loginBtn = await Jimp.read("./assets/login-btn.png");
 
@@ -306,12 +294,45 @@ const task = async (
 
       // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
+        console.log('Start login password authorization');
+        //Авторизация по логину и паролю
+        const pageLogin = await browser.newPage();
+        await pageLogin.goto('https://all-access.wax.io/');
+        await pageLogin.waitForSelector("input[name='userName']");
+        await new Promise(r => setTimeout(r, 2000));
+        await pageLogin.focus('input[name="userName"]');
+        await pageLogin.keyboard.type(username1);
+        await new Promise(r => setTimeout(r, 2000));
+        await pageLogin.focus('input[name="password"]');
+        await pageLogin.keyboard.type(password1);
+        await pageLogin.click('button.button-primary.full-width.button-large.text-1-5rem.text-bold');
+        await new Promise(r => setTimeout(r, 6000));
+        await pageLogin.close();
+
         log("Click Login Page");
         await cursor.moveTo({
           x: random(780, 810),
           y: random(730 + 25 - 2, 740 + 25 - 2),
         });
+        
         await cursor.click();
+        // если не использовать таймаут, то страница авторизации будет открываться два раза, что поломает бота
+        await new Promise(r => setTimeout(r, 4000));
+        
+
+        // Ищем время до начала повторной копки 
+
+        page.on('console', (msg) => {
+          for (let i = 0; i < msg.args().length; ++i)
+          //console.log(`${msg.args()[i]}`,`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine'), typeof(`${msg.args()[i]}`));
+            if (`${msg.args()[i]}`.indexOf('JSHandle:ms until next mine') == 0){ 
+              // const a = `${msg.args()[i]}`;
+              // console.log('It is parametr a: ', a);
+              matches = +`${msg.args()[i]}`.match(/\d+/g);
+              console.log('ms until next mine: ', matches);
+            }
+        });        
+        
         numberOfEmptyPasses = 0;
         continue
       }
@@ -379,9 +400,10 @@ const task = async (
         claimOldBtnPlace,
         claimOldBtn
       ).percent;
-
+ 
       // log("Get old Claim", distanceClaimOldBtn, diffmineClaimOldBtn);
       if (distanceClaimOldBtn < 0.1 && diffmineClaimOldBtn < 0.1) {
+
         log("Get old Claim");
         await cursor.moveTo({
           x: random(740, 780),
@@ -433,6 +455,7 @@ const task = async (
         distanceBackToMiningHubBtn < TOLERANCE &&
         diffClaimBackToMiningHubBtn < TOLERANCE
       ) {
+
         log("Back to Mining");
 
         // await cursor.moveTo({
@@ -445,7 +468,7 @@ const task = async (
         // await pause(1e4);
 
         ({ browser, page, cursor } = await browserSleep(
-          random(13 * 60 - 30, 13 * 60 - 100) * 1000,
+          matches-100000,
           browser,
           page,
           options,
@@ -471,6 +494,7 @@ const task = async (
 
       // log("Clain", distanceClaimBtn, diffClaimBtn);
       if (distanceClaimBtn < TOLERANCE && diffClaimBtn < TOLERANCE) {
+
         log("Clain");
         await cursor.moveTo({
           x: random(590, 610),
