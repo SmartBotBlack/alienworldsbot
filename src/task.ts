@@ -492,7 +492,7 @@ const task = async (
         log(`ms until next mine: ${sleepTime}`);
 
         ({ browser, page, cursor } = await browserSleep(
-          sleepTime - 60 * 1e3,
+          sleepTime - 40 * 1e3,
           browser,
           page,
           options,
