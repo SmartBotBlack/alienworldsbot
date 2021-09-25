@@ -513,7 +513,8 @@ const task = async (
               for (const arg of args) {
                 const message = arg.toString();
                 if (message.includes("Loaded Mining Bonus Scene")) {
-                  res(+(message.split(" ").at(-2) || 0));
+                  const messages = message.split(" ");
+                  res(+(messages[messages.length - 2] || 0));
                 }
               }
             });
@@ -532,7 +533,7 @@ const task = async (
           }),
         ]);
 
-        log(`Mining Bonus: ${claimTLM}`);
+        log(`Mining Bonus: ${claimTLM} TLM`);
 
         log(`ms until next mine: ${sleepTime}`);
 
