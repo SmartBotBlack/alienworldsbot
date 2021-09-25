@@ -70,12 +70,15 @@ const options = {
     "--enable-automation",
     "--enable-blink-features=IdleDetection",
   ],
-  headless: false,
+  headless: process.env.NODE_ENV !== "development",
   slowMo: 20,
   // defaultViewport: null,
   ignoreHTTPSErrors: true,
   // userDataDir: "./tmp",
-  defaultViewport: null,
+  defaultViewport: {
+    width: 1648,
+    height: 1099,
+  },
 };
 
 const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
@@ -83,6 +86,27 @@ const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
 const random = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
+
+type TMutex = () => Promise<() => void>;
+let depth = 0;
+const callbacks: ((func: () => void) => void)[] = [];
+const limitParalell = 1;
+const updateMutex = () => {
+  if (depth < limitParalell) {
+    ++depth;
+    const callback = callbacks.shift();
+    if (callback)
+      callback(() => {
+        --depth;
+        updateMutex();
+      });
+  }
+};
+const mutex: TMutex = () =>
+  new Promise((res) => {
+    callbacks.push(res);
+    updateMutex();
+  });
 
 const getPage = async (
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -92,9 +116,14 @@ const getPage = async (
   proxyAuth?: string,
   proxyHost?: string
 ): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
+  log("Browser is waiting in the launch queue");
+  const onClose = await mutex();
+  log("Browser run");
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const browser = await puppeteer.launch(options);
+  browser.on("disconnected", onClose);
 
   const page = (await browser.pages())[0];
   // const page = await browser.newPage();
@@ -136,7 +165,6 @@ const browserSleep = async (
 
   await pause(pauseTime);
 
-  log("Browser run");
   const { browser, page, cursor } = await getPage(
     options,
     cookies,
@@ -287,10 +315,11 @@ const task = async (
       const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
       const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
 
+      console.log("distanceLoginBtn", distanceLoginBtn);
+      console.log("diffLoginBtn", diffLoginBtn);
+
       // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
       if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
-        console.log("Start login password authorization");
-
         log("Click Login Page");
         await cursor.moveTo({
           x: random(780, 810),

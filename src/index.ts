@@ -52,8 +52,6 @@ void (async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ) as any;
 
-      await new Promise((res) => setTimeout(res, 3e4 * index));
-
       return task(
         file.name + file.ext,
         content,
