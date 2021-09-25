@@ -5,17 +5,20 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import Jimp from "jimp/es";
 
+import config from "./config";
+
 puppeteer.use(StealthPlugin());
-puppeteer.use(
-  // eslint-disable-next-line new-cap
-  RecaptchaPlugin({
-    provider: {
-      id: "2captcha",
-      token: "8d19b37d81678b3bd0c2897c025e6ab3", // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
-    },
-    visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
-  })
-);
+if (config.captchaKey)
+  puppeteer.use(
+    // eslint-disable-next-line new-cap
+    RecaptchaPlugin({
+      provider: {
+        id: "2captcha",
+        token: config.captchaKey,
+      },
+      // visualFeedback: true,
+    })
+  );
 
 const TOLERANCE = 0.1;
 
@@ -90,13 +93,14 @@ const random = (min: number, max: number): number => {
 type TMutex = () => Promise<() => void>;
 let depth = 0;
 const callbacks: ((func: () => void) => void)[] = [];
-const limitParalell = 1;
 const updateMutex = () => {
-  if (depth < limitParalell) {
+  if (depth < config.maximumNumberOfRunningBrowsers) {
+    console.log("++depth");
     ++depth;
     const callback = callbacks.shift();
     if (callback)
       callback(() => {
+        console.log("--depth");
         --depth;
         updateMutex();
       });
