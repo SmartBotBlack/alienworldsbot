@@ -505,18 +505,34 @@ const task = async (
         if (button) await button.click();
         log("Approve Wax");
 
-        const sleepTime = await new Promise<number>((res) => {
-          page.on("console", (msg) => {
-            const args = msg.args();
+        const [claimTLM, sleepTime] = await Promise.all([
+          new Promise<number>((res) => {
+            page.on("console", (msg) => {
+              const args = msg.args();
 
-            for (const arg of args) {
-              const message = arg.toString();
-              if (message.indexOf("JSHandle:ms until next mine") == 0) {
-                res(+(message.match(/\d+/g) || 0));
+              for (const arg of args) {
+                const message = arg.toString();
+                if (message.includes("Loaded Mining Bonus Scene")) {
+                  res(+(message.split(" ").at(-2) || 0));
+                }
               }
-            }
-          });
-        });
+            });
+          }),
+          new Promise<number>((res) => {
+            page.on("console", (msg) => {
+              const args = msg.args();
+
+              for (const arg of args) {
+                const message = arg.toString();
+                if (message.indexOf("JSHandle:ms until next mine") === 0) {
+                  res(+(message.match(/\d+/g) || 0));
+                }
+              }
+            });
+          }),
+        ]);
+
+        log(`Mining Bonus: ${claimTLM}`);
 
         log(`ms until next mine: ${sleepTime}`);
 
