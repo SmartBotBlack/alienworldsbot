@@ -2,6 +2,10 @@
 
 This bot automatically mines TLM and solves the captcha through the Anti-Captha service.
 
+It uses a real browser, but in the background, so it doesn't interfere with your work.
+
+Emulates delays, cursor movements and button presses just like real people.
+
 ## Instalation guide
 
 1. Install [NodeJS](https://nodejs.org/).
