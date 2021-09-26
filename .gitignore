@@ -5,6 +5,7 @@ tmp
 proxies.txt
 errors
 bundle
+config.json
 
 .vscode
 

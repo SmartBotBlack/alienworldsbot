@@ -5,10 +5,21 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import Jimp from "jimp/es";
 
-import config from "./config";
+type TConfig = {
+  maximumNumberOfRunningBrowsers: number;
+  captchaKey: string;
+};
+let config: TConfig | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  config = require("../config.json");
+} catch (e) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  config = require("../config.default.json");
+}
 
 puppeteer.use(StealthPlugin());
-if (config.captchaKey)
+if (config?.captchaKey)
   puppeteer.use(
     // eslint-disable-next-line new-cap
     RecaptchaPlugin({
@@ -94,7 +105,7 @@ type TMutex = () => Promise<() => void>;
 let depth = 0;
 const callbacks: ((func: () => void) => void)[] = [];
 const updateMutex = () => {
-  if (depth < config.maximumNumberOfRunningBrowsers) {
+  if (depth < (config?.maximumNumberOfRunningBrowsers ?? 1)) {
     const callback = callbacks.shift();
     if (callback) {
       ++depth;
