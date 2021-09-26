@@ -502,35 +502,56 @@ const task = async (
 
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
-        if (button) await button.click();
+        if (!button) continue;
+
         log("Approve Wax");
 
         const [claimTLM, sleepTime] = await Promise.all([
           new Promise<number>((res) => {
+            let isRes = false;
             page.on("console", (msg) => {
               const args = msg.args();
 
               for (const arg of args) {
                 const message = arg.toString();
-                if (message.includes("Loaded Mining Bonus Scene")) {
+                if (message.includes("Loaded Mining Bonus Scene") && !isRes) {
+                  isRes = true;
                   const messages = message.split(" ");
                   res(+(messages[messages.length - 2] || 0));
                 }
               }
             });
+            setTimeout(() => {
+              if (!isRes) {
+                isRes = true;
+                res(0);
+              }
+            }, 2e4);
           }),
           new Promise<number>((res) => {
+            let isRes = false;
+
             page.on("console", (msg) => {
               const args = msg.args();
-
               for (const arg of args) {
                 const message = arg.toString();
-                if (message.indexOf("JSHandle:ms until next mine") === 0) {
+                if (
+                  message.indexOf("JSHandle:ms until next mine") === 0 &&
+                  !isRes
+                ) {
+                  isRes = true;
                   res(+(message.match(/\d+/g) || 0));
                 }
               }
             });
+            setTimeout(() => {
+              if (!isRes) {
+                isRes = true;
+                res(0);
+              }
+            }, 2e4);
           }),
+          button.click(),
         ]);
 
         log(`Mining Bonus: ${claimTLM} TLM`);
