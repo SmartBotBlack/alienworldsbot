@@ -12,7 +12,7 @@ Emulates delays, cursor movements and button presses just like real people.
 2. Clone this repository `git clone https://github.com/voodee/alienworldsbot.git`.
 3. Go to folder bot `cd alienworldsbot`.
 4. Use the command `npm ci` to install the lib.
-5. Edit config file `src/config.ts`. Put key from [2captcha](https://2captcha.com/).
+5. Edit config file `config.default.json`. Put key from [2captcha](https://2captcha.com/).
 6. Build bot from source `npm run build`
 
 ## Preparing accounts
