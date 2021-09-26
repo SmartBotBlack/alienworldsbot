@@ -35,4 +35,4 @@ After all the dependencies have been downloaded and installed, simply run:
 npm run mine
 ```
 
-#### _Any problems? [Submit an issue](https://github.com/voodee/alienworldsbot/issues/new) or send message in telegram [@smartbotblack](https://t.me/smartbotblack)!_
+#### _Any problems? [Submit an issue](https://github.com/voodee/alienworldsbot/issues/new) or send message in telegram [@smartbotblack](https://t.me/smartbotblack) or email [hello@smartbot.black](https://smartbot.black)!_
