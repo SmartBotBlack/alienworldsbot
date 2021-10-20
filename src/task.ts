@@ -235,113 +235,6 @@ const task = async (
       }
 
       // ***
-      // Проверяем наличие CPU ошибки
-      // // ***
-      // const cpuErrorPlace = image.clone().crop(400, 420 + 25 - 2, 850, 170);
-      // // cpuErrorPlace.write("assets/cpu-error.png");
-      // const cpuError = await Jimp.read("./assets/cpu-error.png");
-
-      // const distanceCpuError = Jimp.distance(cpuErrorPlace, cpuError);
-      // const diffCpuError = Jimp.diff(cpuErrorPlace, cpuError).percent;
-      // const cpuError = await page.$(
-      //   ".go2072408551"
-      // );
-  
-
-      // // log("CPU error detected", distanceCpuError, diffCpuError);
-      // if (cpuError !== undefined && cpuError !== null) {
-      //   log("CPU error detected");
-
-      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      //   const value = await page.evaluate(el => el.textContent, cpuError)
-      //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      //   log(`${value}`);
-      //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-
-      //   ({ browser, page, cursor } = await browserSleep(
-      //     pauseTime,
-      //     browser,
-      //     page,
-      //     options,
-      //     cookies,
-      //     log,
-      //     proxyAuth,
-      //     proxyHost
-      //   ));
-
-      //   continue;
-      // }
-
-          // ***
-      // Проверяем наличие CPU ошибки
-      // ***  
-
-        // const cpuErrorChild = await page.waitForSelector('.go318386747');
-     
-            // const cpuErrorChild = await page.waitForSelector('.go318386747'); 
-
-            // if (cpuErrorChild !== undefined && cpuErrorChild !== null) {
-            //   log("CPU error detected");
-              
-            //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            //   const value = await page.evaluate(el => el.textContent, cpuErrorChild)
-            //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            //   log(`${value}`);
-            //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-      
-            //   ({ browser, page, cursor } = await browserSleep(
-            //     pauseTime,
-            //     browser,
-            //     page,
-            //     options,
-            //     cookies,
-            //     log,
-            //     proxyAuth,
-            //     proxyHost
-            //   ));
-      
-            //   continue;
-            //   }
-
-      // ***
-      // Проверяем наличие другой CPU ошибки
-      // ***
-      // const cpuError2Place = image.clone().crop(400, 400 + 25 - 2, 850, 170);
-      // // cpuError2Place.write("assets/cpu-error2.png");
-      // const cpuError2 = await Jimp.read("./assets/cpu-error2.png");
-
-      // const distanceCpuError2 = Jimp.distance(cpuError2Place, cpuError2);
-      // const diffCpuError2 = Jimp.diff(cpuError2Place, cpuError2).percent;
-
-      // // log("CPU error detected2", distanceCpuError2, diffCpuError2);
-      // if (distanceCpuError2 < TOLERANCE && diffCpuError2 < TOLERANCE) {
-      //   log("CPU error detected");
-
-      //   await cursor.moveTo({
-      //     x: random(1230, 1265),
-      //     y: random(260 + 25 - 2, 280 + 25 - 2),
-      //   });
-      //   await cursor.click();
-
-      //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-      //   // log(`Pause: ${pauseTime / 1000}sec`);
-      //   // await pause(pauseTime);
-
-      //   ({ browser, page, cursor } = await browserSleep(
-      //     pauseTime,
-      //     browser,
-      //     page,
-      //     options,
-      //     cookies,
-      //     log,
-      //     proxyAuth,
-      //     proxyHost
-      //   ));
-
-      //   continue;
-      // }
-
-      // ***
       // Проверяем нужно ли войти
       // ***
 
@@ -352,22 +245,7 @@ const task = async (
       if (loginBtnPlace !== undefined) {
         log("Click Login Page");
 
-        await loginBtnPlace.click();
-
-        // const popup: Page = await new Promise((res) => {
-        //   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        //   browser.once("targetcreated", (target) => res(target.page()));
-        //   void cursor.click();
-        //   console.log('click')
-        // });
-
-        // await popup.waitForSelector(".react-ripples button");
-        // const button = await popup.$(".react-ripples button");
-        // button
-        // if (button !== null){
-        //   console.log('done');
-        //   await button.click()
-        // }  
+        await loginBtnPlace.click(); 
         await new Promise((r) => setTimeout(r, 4000));
 
         numberOfEmptyPasses = 0;
@@ -485,8 +363,6 @@ const task = async (
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const Min = await page.evaluate(element => element.textContent, elementMin);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        // const Sec = await page.evaluate(element => element.textContent, elementSes);
-        // console.log(Min*60,':',Sec+20);
         if(elementMin !== undefined && elementSes !== undefined){
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ({ browser, page, cursor} = await browserSleep(
