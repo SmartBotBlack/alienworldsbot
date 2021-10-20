@@ -3,7 +3,7 @@ import puppeteer from "puppeteer-extra";
 import { createCursor, GhostCursor } from "ghost-cursor";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
-import Jimp from "jimp/es";
+// import Jimp from "jimp/es";
 
 type TConfig = {
   maximumNumberOfRunningBrowsers: number;
@@ -31,8 +31,6 @@ if (config?.captchaKey)
     })
   );
 
-const TOLERANCE = 0.1;
-
 const USER_AGENT_MAC =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36";
 const USER_AGENT_WINDOWS =
@@ -52,9 +50,9 @@ function getUserAgent() {
 }
 
 const args = [
-  "--window-position=0,0",
+  // "--window-position=0,0",
   // ...
-  "--window-size=1680,1220",
+  // "--window-size=1680,1220",
   "--disable-gpu",
   "--no-sandbox",
   "--enable-features=NetworkService,NetworkServiceInProcess",
@@ -77,22 +75,22 @@ const args = [
   "--no-default-browser-check",
   "--test-type",
 ];
-
+ 
 const options = {
   args,
   ignoreDefaultArgs: [
     "--enable-automation",
     "--enable-blink-features=IdleDetection",
   ],
-  headless: process.env.NODE_ENV !== "development",
+  headless:  process.env.NODE_ENV !== "development",
   slowMo: 20,
   // defaultViewport: null,
   ignoreHTTPSErrors: true,
   // userDataDir: "./tmp",
-  defaultViewport: {
-    width: 1648,
-    height: 1099,
-  },
+  // defaultViewport: {
+  //   width: 1648,
+  //   height: 1099,
+  // },
 };
 
 const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
@@ -129,7 +127,7 @@ const getPage = async (
   log: (str: string) => void,
   proxyAuth?: string,
   proxyHost?: string
-): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor}> => {
   log("Browser is waiting in the launch queue");
   const onClose = await mutex();
   log("Browser run");
@@ -148,12 +146,12 @@ const getPage = async (
     await page.authenticate({ username, password });
     log(`Use proxy ${proxyAuth}@${proxyHost}`);
   }
-
+  log(`Add cookies`);
   await page.setCookie(...cookies);
-
   const cursor = createCursor(page);
+  
 
-  await page.goto("https://play.alienworlds.io/", {
+  await page.goto("https://play.alienworlds.io/", { // https://yandex.ru/
     waitUntil: "networkidle2",
     timeout: 0,
   });
@@ -171,7 +169,7 @@ const browserSleep = async (
   log: (str: string) => void,
   proxyAuth?: string,
   proxyHost?: string
-): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor}> => {
   log(`Browser sleep: ${pauseTime / 1000}sec`);
 
   await oldPage.close();
@@ -179,14 +177,14 @@ const browserSleep = async (
 
   await pause(pauseTime);
 
-  const { browser, page, cursor } = await getPage(
+  const { browser, page, cursor} = await getPage(
     options,
     cookies,
     log,
     proxyAuth,
     proxyHost
   );
-  return { page, browser, cursor };
+  return { page, browser, cursor};
 };
 
 const task = async (
@@ -208,7 +206,7 @@ const task = async (
     };
   }
 
-  let { browser, page, cursor } = await getPage(
+  let { browser, page, cursor} = await getPage(
     newOptions,
     cookies,
     log,
@@ -235,110 +233,141 @@ const task = async (
           }
         }
       }
-      //
-      const imageBuffer = (await page.screenshot({
-        type: "png",
-        fullPage: true,
-        // omitBackground: true,
-      })) as Buffer;
 
-      const image = await Jimp.read(imageBuffer);
-      image.write(`./tmp/${name}.png`);
-      //
       // ***
       // Проверяем наличие CPU ошибки
-      // ***
-      const cpuErrorPlace = image.clone().crop(400, 420 + 25 - 2, 850, 170);
-      // cpuErrorPlace.write("assets/cpu-error.png");
-      const cpuError = await Jimp.read("./assets/cpu-error.png");
+      // // ***
+      // const cpuErrorPlace = image.clone().crop(400, 420 + 25 - 2, 850, 170);
+      // // cpuErrorPlace.write("assets/cpu-error.png");
+      // const cpuError = await Jimp.read("./assets/cpu-error.png");
 
-      const distanceCpuError = Jimp.distance(cpuErrorPlace, cpuError);
-      const diffCpuError = Jimp.diff(cpuErrorPlace, cpuError).percent;
+      // const distanceCpuError = Jimp.distance(cpuErrorPlace, cpuError);
+      // const diffCpuError = Jimp.diff(cpuErrorPlace, cpuError).percent;
+      // const cpuError = await page.$(
+      //   ".go2072408551"
+      // );
+  
 
-      // log("CPU error detected", distanceCpuError, diffCpuError);
-      if (distanceCpuError < TOLERANCE && diffCpuError < TOLERANCE) {
-        log("CPU error detected");
+      // // log("CPU error detected", distanceCpuError, diffCpuError);
+      // if (cpuError !== undefined && cpuError !== null) {
+      //   log("CPU error detected");
 
-        await cursor.moveTo({
-          x: random(1235, 1260),
-          y: random(284 + 25 - 2, 310 + 25 - 2),
-        });
-        await cursor.click();
+      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      //   const value = await page.evaluate(el => el.textContent, cpuError)
+      //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      //   log(`${value}`);
+      //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
 
-        const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
+      //   ({ browser, page, cursor } = await browserSleep(
+      //     pauseTime,
+      //     browser,
+      //     page,
+      //     options,
+      //     cookies,
+      //     log,
+      //     proxyAuth,
+      //     proxyHost
+      //   ));
 
-        ({ browser, page, cursor } = await browserSleep(
-          pauseTime,
-          browser,
-          page,
-          options,
-          cookies,
-          log,
-          proxyAuth,
-          proxyHost
-        ));
+      //   continue;
+      // }
 
-        continue;
-      }
+          // ***
+      // Проверяем наличие CPU ошибки
+      // ***  
+
+        // const cpuErrorChild = await page.waitForSelector('.go318386747');
+     
+            // const cpuErrorChild = await page.waitForSelector('.go318386747'); 
+
+            // if (cpuErrorChild !== undefined && cpuErrorChild !== null) {
+            //   log("CPU error detected");
+              
+            //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            //   const value = await page.evaluate(el => el.textContent, cpuErrorChild)
+            //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            //   log(`${value}`);
+            //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
+      
+            //   ({ browser, page, cursor } = await browserSleep(
+            //     pauseTime,
+            //     browser,
+            //     page,
+            //     options,
+            //     cookies,
+            //     log,
+            //     proxyAuth,
+            //     proxyHost
+            //   ));
+      
+            //   continue;
+            //   }
 
       // ***
       // Проверяем наличие другой CPU ошибки
       // ***
-      const cpuError2Place = image.clone().crop(400, 400 + 25 - 2, 850, 170);
-      // cpuError2Place.write("assets/cpu-error2.png");
-      const cpuError2 = await Jimp.read("./assets/cpu-error2.png");
+      // const cpuError2Place = image.clone().crop(400, 400 + 25 - 2, 850, 170);
+      // // cpuError2Place.write("assets/cpu-error2.png");
+      // const cpuError2 = await Jimp.read("./assets/cpu-error2.png");
 
-      const distanceCpuError2 = Jimp.distance(cpuError2Place, cpuError2);
-      const diffCpuError2 = Jimp.diff(cpuError2Place, cpuError2).percent;
+      // const distanceCpuError2 = Jimp.distance(cpuError2Place, cpuError2);
+      // const diffCpuError2 = Jimp.diff(cpuError2Place, cpuError2).percent;
 
-      // log("CPU error detected2", distanceCpuError2, diffCpuError2);
-      if (distanceCpuError2 < TOLERANCE && diffCpuError2 < TOLERANCE) {
-        log("CPU error detected");
+      // // log("CPU error detected2", distanceCpuError2, diffCpuError2);
+      // if (distanceCpuError2 < TOLERANCE && diffCpuError2 < TOLERANCE) {
+      //   log("CPU error detected");
 
-        await cursor.moveTo({
-          x: random(1230, 1265),
-          y: random(260 + 25 - 2, 280 + 25 - 2),
-        });
-        await cursor.click();
+      //   await cursor.moveTo({
+      //     x: random(1230, 1265),
+      //     y: random(260 + 25 - 2, 280 + 25 - 2),
+      //   });
+      //   await cursor.click();
 
-        const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
-        // log(`Pause: ${pauseTime / 1000}sec`);
-        // await pause(pauseTime);
+      //   const pauseTime = random(60 * 60 * 1000, 60 * 60 * 4 * 1000);
+      //   // log(`Pause: ${pauseTime / 1000}sec`);
+      //   // await pause(pauseTime);
 
-        ({ browser, page, cursor } = await browserSleep(
-          pauseTime,
-          browser,
-          page,
-          options,
-          cookies,
-          log,
-          proxyAuth,
-          proxyHost
-        ));
+      //   ({ browser, page, cursor } = await browserSleep(
+      //     pauseTime,
+      //     browser,
+      //     page,
+      //     options,
+      //     cookies,
+      //     log,
+      //     proxyAuth,
+      //     proxyHost
+      //   ));
 
-        continue;
-      }
+      //   continue;
+      // }
 
       // ***
       // Проверяем нужно ли войти
       // ***
 
-      const loginBtnPlace = image.clone().crop(740, 725 + 25 - 2, 160, 65);
-      const loginBtn = await Jimp.read("./assets/login-btn.png");
+      const [loginBtnPlace] = await page.$x(
+        "//span[contains(., 'Start Now')]"
+      );
 
-      const distanceLoginBtn = Jimp.distance(loginBtnPlace, loginBtn);
-      const diffLoginBtn = Jimp.diff(loginBtnPlace, loginBtn).percent;
-
-      // log("Click Login Page", distanceLoginBtn, diffLoginBtn);
-      if (distanceLoginBtn < 0.1 && diffLoginBtn < 0.1) {
+      if (loginBtnPlace !== undefined) {
         log("Click Login Page");
-        await cursor.moveTo({
-          x: random(780, 810),
-          y: random(730 + 25 - 2, 740 + 25 - 2),
-        });
 
-        await cursor.click();
-        // если не использовать таймаут, то страница авторизации будет открываться два раза, что поломает бота
+        await loginBtnPlace.click();
+
+        // const popup: Page = await new Promise((res) => {
+        //   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        //   browser.once("targetcreated", (target) => res(target.page()));
+        //   void cursor.click();
+        //   console.log('click')
+        // });
+
+        // await popup.waitForSelector(".react-ripples button");
+        // const button = await popup.$(".react-ripples button");
+        // button
+        // if (button !== null){
+        //   console.log('done');
+        //   await button.click()
+        // }  
         await new Promise((r) => setTimeout(r, 4000));
 
         numberOfEmptyPasses = 0;
@@ -346,76 +375,17 @@ const task = async (
       }
 
       // ***
-      // Проверяем нужно ли перейти на экран майнинга
-      // ***
-      const mineBtnPlace = image.clone().crop(1235, 315 + 25 - 2, 250, 55);
-      // mineBtnPlace.write("assets/mine-btn.png");
-      const mineBtn = await Jimp.read("./assets/mine-btn.png");
-
-      const distanceMineBtn = Jimp.distance(mineBtnPlace, mineBtn);
-      const diffMineBtn = Jimp.diff(mineBtnPlace, mineBtn).percent;
-
-      // log("Go to Mine", distanceMineBtn, diffMineBtn);
-      if (distanceMineBtn < 0.1 && diffMineBtn < 0.1) {
-        log("Go to Mine");
-        await cursor.moveTo({
-          x: random(1240, 1270),
-          y: random(320 + 25 - 2, 335 + 25 - 2),
-        });
-        await cursor.click();
-        numberOfEmptyPasses = 0;
-        continue;
-      }
-
-      // ***
-      // Проверяем можно ли майнить
-      // ***
-      const mineStartBtnPlace = image.clone().crop(740, 880 + 25 - 2, 160, 45);
-      // mineStartBtnPlace.write("assets/mine-start-btn.png");
-      const mineStartBtn = await Jimp.read("./assets/mine-start-btn.png");
-
-      const distanceMineStartBtn = Jimp.distance(
-        mineStartBtnPlace,
-        mineStartBtn
-      );
-      const diffmineStartBtn = Jimp.diff(
-        mineStartBtnPlace,
-        mineStartBtn
-      ).percent;
-
-      // log("Start Mine", distanceMineStartBtn, diffmineStartBtn);
-      if (distanceMineStartBtn < 0.1 && diffmineStartBtn < 0.1) {
-        log("Start Mine");
-        await cursor.moveTo({
-          x: random(745, 760),
-          y: random(910 + 25 - 2, 940 + 25 - 2),
-        });
-        await cursor.click();
-        numberOfEmptyPasses = 0;
-
-        continue;
-      }
-
-      // ***
       // Проверяем можно ли собрать монеты
       // ***
-      const claimOldBtnPlace = image.clone().crop(735, 880 + 25 - 2, 170, 45);
-      // claimOldBtnPlace.write("assets/claim-old-btn.png");
-      const claimOldBtn = await Jimp.read("./assets/claim-old-btn.png");
 
-      const distanceClaimOldBtn = Jimp.distance(claimOldBtnPlace, claimOldBtn);
-      const diffmineClaimOldBtn = Jimp.diff(
-        claimOldBtnPlace,
-        claimOldBtn
-      ).percent;
+      const [claimBtn] = await page.$x(
+        "//span[contains(., 'Claim Mine')]"
+      );
 
-      // log("Get old Claim", distanceClaimOldBtn, diffmineClaimOldBtn);
-      if (distanceClaimOldBtn < 0.1 && diffmineClaimOldBtn < 0.1) {
-        log("Get old Claim");
-        await cursor.moveTo({
-          x: random(740, 780),
-          y: random(890 + 25 - 2, 915 + 25 - 2),
-        });
+      if (claimBtn !== undefined) {
+        log("Get Claim");
+        
+        await claimBtn.click();
 
         const popup: Page = await new Promise((res) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -425,96 +395,8 @@ const task = async (
 
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
-        if (button) await button.click();
-        log("Approve Wax");
 
-        numberOfEmptyPasses = 0;
-        continue;
-      }
-
-      // ***
-      // После сбора возвращаемся обратно
-      // ***
-      const backToMiningHubBtnPlace = image
-        .clone()
-        .crop(320, 805 + 25 - 2, 240, 45);
-      // backToMiningHubBtnPlace.write("assets/back-to-mining-hub-btn.png");
-      const backToMiningHubBtn = await Jimp.read(
-        "./assets/back-to-mining-hub-btn.png"
-      );
-
-      const distanceBackToMiningHubBtn = Jimp.distance(
-        backToMiningHubBtnPlace,
-        backToMiningHubBtn
-      );
-      const diffClaimBackToMiningHubBtn = Jimp.diff(
-        backToMiningHubBtnPlace,
-        backToMiningHubBtn
-      ).percent;
-
-      // log(
-      //   "Back to Mining",
-      //   distanceBackToMiningHubBtn,
-      //   diffClaimBackToMiningHubBtn
-      // );
-      if (
-        distanceBackToMiningHubBtn < TOLERANCE &&
-        diffClaimBackToMiningHubBtn < TOLERANCE
-      ) {
-        log("Back to Mining");
-
-        // await cursor.moveTo({
-        //   x: random(330, 350),
-        //   y: random(815 + 25 - 2, 835 + 25 - 2),
-        // });
-
-        // await cursor.click();
-
-        // await pause(1e4);
-
-        ({ browser, page, cursor } = await browserSleep(
-          12 * 60 * 1e3,
-          browser,
-          page,
-          options,
-          cookies,
-          log,
-          proxyAuth,
-          proxyHost
-        ));
-
-        numberOfEmptyPasses = 0;
-        continue;
-      }
-
-      // ***
-      // Проверяем можно ли собрать монеты
-      // ***
-      const claimBtnPlace = image.clone().crop(590, 625 + 25 - 2, 170, 40);
-      // claimBtnPlace.write("assets/claim-btn.png");
-      const claimtBtn = await Jimp.read("./assets/claim-btn.png");
-
-      const distanceClaimBtn = Jimp.distance(claimBtnPlace, claimtBtn);
-      const diffClaimBtn = Jimp.diff(claimBtnPlace, claimtBtn).percent;
-
-      // log("Clain", distanceClaimBtn, diffClaimBtn);
-      if (distanceClaimBtn < TOLERANCE && diffClaimBtn < TOLERANCE) {
-        log("Clain");
-        await cursor.moveTo({
-          x: random(590, 610),
-          y: random(625 + 25 - 2, 645 + 25 - 2),
-        });
-
-        const popup: Page = await new Promise((res) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-          browser.once("targetcreated", (target) => res(target.page()));
-          void cursor.click();
-        });
-
-        await popup.waitForSelector(".react-ripples button");
-        const button = await popup.$(".react-ripples button");
-        if (!button) continue;
-
+        if (button){
         log("Approve Wax");
 
         const [claimTLM, sleepTime] = await Promise.all([
@@ -525,7 +407,7 @@ const task = async (
 
               for (const arg of args) {
                 const message = arg.toString();
-                if (message.includes("Loaded Mining Bonus Scene") && !isRes) {
+                if (message.includes("Mine result:") && !isRes) {
                   isRes = true;
                   const messages = message.split(" ");
                   res(+(messages[messages.length - 2] || 0));
@@ -547,7 +429,7 @@ const task = async (
               for (const arg of args) {
                 const message = arg.toString();
                 if (
-                  message.indexOf("JSHandle:ms until next mine") === 0 &&
+                  message.indexOf("JSHandle:Time until next mine in ms:") === 0 &&
                   !isRes
                 ) {
                   isRes = true;
@@ -555,6 +437,7 @@ const task = async (
                 }
               }
             });
+
             setTimeout(() => {
               if (!isRes) {
                 isRes = true;
@@ -570,7 +453,7 @@ const task = async (
         log(`ms until next mine: ${sleepTime}`);
 
         ({ browser, page, cursor } = await browserSleep(
-          sleepTime - 40 * 1e3,
+          sleepTime - 30 * 1e3,
           browser,
           page,
           options,
@@ -583,10 +466,64 @@ const task = async (
         numberOfEmptyPasses = 0;
         continue;
       }
+    }
+    
+     // ***
+      // Проверяем время
+      // ***
+
+      const [nextMine] = await page.$x(
+        "//p[contains(., 'Next Mine Attempt')]"
+      );
+
+      if (nextMine !== undefined){
+        log("Waiting to recharge");
+
+        const elementMin = await page.$(".css-79wky");
+        const elementSes = await page.$(".css-0");
+        
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const Min = await page.evaluate(element => element.textContent, elementMin);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // const Sec = await page.evaluate(element => element.textContent, elementSes);
+        // console.log(Min*60,':',Sec+20);
+        if(elementMin !== undefined && elementSes !== undefined){
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        ({ browser, page, cursor} = await browserSleep(
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+          ((Min*60)+55)*1000,
+          browser,
+          page,
+          options,
+          cookies,
+          log,
+          proxyAuth,
+          proxyHost
+        ));    
+
+        numberOfEmptyPasses = 0;
+        continue;
+      }} 
+
+      // ***
+      // Проверяем можно ли майнить
+      // ***
+   
+      const [mineStartBtn] = await page.$x(
+        "//span[contains(., 'Mine')]"
+      );
+
+      if (mineStartBtn !== undefined) {
+        log("Start Mine");
+        await mineStartBtn.click();
+
+        numberOfEmptyPasses = 0;
+        continue;
+      }
 
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
-        ({ browser, page, cursor } = await browserSleep(
+        ({ browser, page, cursor} = await browserSleep(
           random(6e4, 18e4),
           browser,
           page,
