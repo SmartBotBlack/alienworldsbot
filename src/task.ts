@@ -3,7 +3,6 @@ import puppeteer from "puppeteer-extra";
 import { createCursor, GhostCursor } from "ghost-cursor";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
-// import Jimp from "jimp/es";
 
 type TConfig = {
   maximumNumberOfRunningBrowsers: number;
@@ -27,7 +26,6 @@ if (config?.captchaKey)
         id: "2captcha",
         token: config.captchaKey,
       },
-      // visualFeedback: true,
     })
   );
 
@@ -50,9 +48,6 @@ function getUserAgent() {
 }
 
 const args = [
-  // "--window-position=0,0",
-  // ...
-  // "--window-size=1680,1220",
   "--disable-gpu",
   "--no-sandbox",
   "--enable-features=NetworkService,NetworkServiceInProcess",
@@ -63,34 +58,25 @@ const args = [
   "--user-agent=" + getUserAgent(),
   "--ignore-certifcate-errors",
   "--ignore-certifcate-errors-spki-list",
-  // ...
-  // "--single-process",
   "--disable-accelerated-2d-canvas",
   "--no-first-run",
   "--no-zygote",
   "--force-gpu-mem-available-mb=1024",
-  // ..
   "--disable-web-security",
   "--disable-features=site-per-process",
   "--no-default-browser-check",
   "--test-type",
 ];
- 
+
 const options = {
   args,
   ignoreDefaultArgs: [
     "--enable-automation",
     "--enable-blink-features=IdleDetection",
   ],
-  headless:  process.env.NODE_ENV !== "development",
+  headless: process.env.NODE_ENV !== "development",
   slowMo: 20,
-  // defaultViewport: null,
   ignoreHTTPSErrors: true,
-  // userDataDir: "./tmp",
-  // defaultViewport: {
-  //   width: 1648,
-  //   height: 1099,
-  // },
 };
 
 const pause = (timeout = 5e3) => new Promise((res) => setTimeout(res, timeout));
@@ -127,7 +113,7 @@ const getPage = async (
   log: (str: string) => void,
   proxyAuth?: string,
   proxyHost?: string
-): Promise<{ page: Page; browser: Browser; cursor: GhostCursor}> => {
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
   log("Browser is waiting in the launch queue");
   const onClose = await mutex();
   log("Browser run");
@@ -138,8 +124,6 @@ const getPage = async (
   browser.on("disconnected", onClose);
 
   const page = (await browser.pages())[0];
-  // const page = await browser.newPage();
-  // page.setDefaultNavigationTimeout(0);
 
   if (proxyAuth && proxyHost) {
     const [username, password] = proxyAuth.split(":");
@@ -149,9 +133,8 @@ const getPage = async (
   log(`Add cookies`);
   await page.setCookie(...cookies);
   const cursor = createCursor(page);
-  
 
-  await page.goto("https://play.alienworlds.io/", { // https://yandex.ru/
+  await page.goto("https://play.alienworlds.io/", {
     waitUntil: "networkidle2",
     timeout: 0,
   });
@@ -169,7 +152,7 @@ const browserSleep = async (
   log: (str: string) => void,
   proxyAuth?: string,
   proxyHost?: string
-): Promise<{ page: Page; browser: Browser; cursor: GhostCursor}> => {
+): Promise<{ page: Page; browser: Browser; cursor: GhostCursor }> => {
   log(`Browser sleep: ${pauseTime / 1000}sec`);
 
   await oldPage.close();
@@ -177,14 +160,14 @@ const browserSleep = async (
 
   await pause(pauseTime);
 
-  const { browser, page, cursor} = await getPage(
+  const { browser, page, cursor } = await getPage(
     options,
     cookies,
     log,
     proxyAuth,
     proxyHost
   );
-  return { page, browser, cursor};
+  return { page, browser, cursor };
 };
 
 const task = async (
@@ -206,7 +189,7 @@ const task = async (
     };
   }
 
-  let { browser, page, cursor} = await getPage(
+  let { browser, page, cursor } = await getPage(
     newOptions,
     cookies,
     log,
@@ -225,7 +208,7 @@ const task = async (
       for (const iframe of iframes) {
         const srcSource = await iframe.getProperty("src");
         if (srcSource) {
-          const src: string = await srcSource.jsonValue();
+          const src: string | null = await srcSource.jsonValue();
           if (src?.includes("hcaptcha")) {
             log("Captcha Detected");
             await page.solveRecaptchas();
@@ -237,16 +220,13 @@ const task = async (
       // ***
       // Проверяем нужно ли войти
       // ***
-
-      const [loginBtnPlace] = await page.$x(
-        "//span[contains(., 'Start Now')]"
-      );
+      const [loginBtnPlace] = await page.$x("//span[contains(., 'Start Now')]");
 
       if (loginBtnPlace !== undefined) {
         log("Click Login Page");
 
-        await loginBtnPlace.click(); 
-        await new Promise((r) => setTimeout(r, 4000));
+        await loginBtnPlace.click();
+        await pause(random(0, 4 * 1000));
 
         numberOfEmptyPasses = 0;
         continue;
@@ -255,14 +235,11 @@ const task = async (
       // ***
       // Проверяем можно ли собрать монеты
       // ***
-
-      const [claimBtn] = await page.$x(
-        "//span[contains(., 'Claim Mine')]"
-      );
+      const [claimBtn] = await page.$x("//span[contains(., 'Claim Mine')]");
 
       if (claimBtn !== undefined) {
         log("Get Claim");
-        
+
         await claimBtn.click();
 
         const popup: Page = await new Promise((res) => {
@@ -274,120 +251,121 @@ const task = async (
         await popup.waitForSelector(".react-ripples button");
         const button = await popup.$(".react-ripples button");
 
-        if (button){
-        log("Approve Wax");
+        if (button) {
+          log("Approve Wax");
 
-        const [claimTLM, sleepTime] = await Promise.all([
-          new Promise<number>((res) => {
-            let isRes = false;
-            page.on("console", (msg) => {
-              const args = msg.args();
+          const [claimTLM, sleepTime] = await Promise.all([
+            new Promise<number>((res) => {
+              let isRes = false;
+              page.on("console", (msg) => {
+                const args = msg.args();
 
-              for (const arg of args) {
-                const message = arg.toString();
-                if (message.includes("Mine result:") && !isRes) {
-                  isRes = true;
-                  const messages = message.split(" ");
-                  res(+(messages[messages.length - 2] || 0));
+                for (const arg of args) {
+                  const message = arg.toString();
+                  if (message.includes("Mine result:") && !isRes) {
+                    isRes = true;
+                    const messages = message.split(" ");
+                    res(+(messages[messages.length - 2] || 0));
+                  }
                 }
-              }
-            });
-            setTimeout(() => {
-              if (!isRes) {
-                isRes = true;
-                res(0);
-              }
-            }, 2e4);
-          }),
-          new Promise<number>((res) => {
-            let isRes = false;
-
-            page.on("console", (msg) => {
-              const args = msg.args();
-              for (const arg of args) {
-                const message = arg.toString();
-                if (
-                  message.indexOf("JSHandle:Time until next mine in ms:") === 0 &&
-                  !isRes
-                ) {
+              });
+              setTimeout(() => {
+                if (!isRes) {
                   isRes = true;
-                  res(+(message.match(/\d+/g) || 0));
+                  res(0);
                 }
-              }
-            });
+              }, 2e4);
+            }),
+            new Promise<number>((res) => {
+              let isRes = false;
 
-            setTimeout(() => {
-              if (!isRes) {
-                isRes = true;
-                res(0);
-              }
-            }, 2e4);
-          }),
-          button.click(),
-        ]);
+              page.on("console", (msg) => {
+                const args = msg.args();
+                for (const arg of args) {
+                  const message = arg.toString();
+                  if (
+                    message.indexOf("JSHandle:Time until next mine in ms:") ===
+                      0 &&
+                    !isRes
+                  ) {
+                    isRes = true;
+                    res(+(message.match(/\d+/g) || 0));
+                  }
+                }
+              });
 
-        log(`Mining Bonus: ${claimTLM} TLM`);
+              setTimeout(() => {
+                if (!isRes) {
+                  isRes = true;
+                  res(0);
+                }
+              }, 2e4);
+            }),
+            button.click(),
+          ]);
 
-        log(`ms until next mine: ${sleepTime}`);
+          log(`Mining Bonus: ${claimTLM} TLM`);
 
-        ({ browser, page, cursor } = await browserSleep(
-          sleepTime - 30 * 1e3,
-          browser,
-          page,
-          options,
-          cookies,
-          log,
-          proxyAuth,
-          proxyHost
-        ));
+          log(`ms until next mine: ${sleepTime}`);
 
-        numberOfEmptyPasses = 0;
-        continue;
+          ({ browser, page, cursor } = await browserSleep(
+            sleepTime - 30 * 1e3,
+            browser,
+            page,
+            options,
+            cookies,
+            log,
+            proxyAuth,
+            proxyHost
+          ));
+
+          numberOfEmptyPasses = 0;
+          continue;
+        }
       }
-    }
-    
-     // ***
+
+      // ***
       // Проверяем время
       // ***
+      const [nextMine] = await page.$x("//p[contains(., 'Next Mine Attempt')]");
 
-      const [nextMine] = await page.$x(
-        "//p[contains(., 'Next Mine Attempt')]"
-      );
-
-      if (nextMine !== undefined){
+      if (nextMine !== undefined) {
         log("Waiting to recharge");
 
-        const elementMin = await page.$(".css-79wky");
-        const elementSes = await page.$(".css-0");
-        
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const Min = await page.evaluate(element => element.textContent, elementMin);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        if(elementMin !== undefined && elementSes !== undefined){
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        ({ browser, page, cursor} = await browserSleep(
-          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-          ((Min*60)+55)*1000,
-          browser,
-          page,
-          options,
-          cookies,
-          log,
-          proxyAuth,
-          proxyHost
-        ));    
+        const [, elementMin, elementSes] = await page.$$(
+          ".chakra-text:nth-child(1) > span"
+        );
 
-        numberOfEmptyPasses = 0;
-        continue;
-      }} 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const Min = await page.evaluate(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+          (element) => element.textContent,
+          elementMin
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        if (elementMin !== undefined && elementSes !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          ({ browser, page, cursor } = await browserSleep(
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+            (Min * 60 + 55) * 1000,
+            browser,
+            page,
+            options,
+            cookies,
+            log,
+            proxyAuth,
+            proxyHost
+          ));
+
+          numberOfEmptyPasses = 0;
+          continue;
+        }
+      }
 
       // ***
       // Проверяем можно ли майнить
       // ***
-   
-      const [mineStartBtn] = await page.$x(
-        "//span[contains(., 'Mine')]"
-      );
+      const [mineStartBtn] = await page.$x("//span[contains(., 'Mine')]");
 
       if (mineStartBtn !== undefined) {
         log("Start Mine");
@@ -399,7 +377,7 @@ const task = async (
 
       ++numberOfEmptyPasses;
       if (numberOfEmptyPasses > 20) {
-        ({ browser, page, cursor} = await browserSleep(
+        ({ browser, page, cursor } = await browserSleep(
           random(6e4, 18e4),
           browser,
           page,
@@ -416,6 +394,7 @@ const task = async (
     } catch (error: any) {
       log("Throw Error");
       log(error);
+
       try {
         const pages = await browser.pages();
         for (const anotherPage of pages) {
@@ -429,7 +408,6 @@ const task = async (
         console.error(e);
       }
 
-      // await page.reload();
       ({ browser, page, cursor } = await browserSleep(
         1e4,
         browser,
