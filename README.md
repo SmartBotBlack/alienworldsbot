@@ -9,7 +9,7 @@ Emulates delays, cursor movements and button presses just like real people.
 ## Instalation guide
 
 1. Install [NodeJS](https://nodejs.org/).
-2. Clone this repository `git clone https://github.com/voodee/alienworldsbot.git`.
+2. Clone this repository `git clone https://github.com/SmartBotBlack/alienworldsbot.git`.
 3. Go to folder bot `cd alienworldsbot`.
 4. Use the command `npm ci` to install the lib.
 5. Edit config file `config.default.json`. Put key from [2captcha](https://2captcha.com/).
@@ -35,4 +35,5 @@ After all the dependencies have been downloaded and installed, simply run:
 npm run mine
 ```
 
-#### _Any problems? [Submit an issue](https://github.com/voodee/alienworldsbot/issues/new) or send message in telegram [@smartbotblack](https://t.me/smartbotblack) or email [hello@smartbot.black](https://smartbot.black)!_
+## Support
+_Any problems? [Submit an issue](https://github.com/SmartBotBlack/alienworldsbot/issues/new) or send message in telegram [@smartbotblack](https://t.me/smartbotblack) or email [hello@smartbot.black](https://smartbot.black)!_
