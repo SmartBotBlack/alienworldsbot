@@ -117,7 +117,9 @@ const getPage = async (
   log("Browser is waiting in the launch queue");
   const onClose = await mutex();
   log("Browser run");
-
+  if (proxyHost) {
+    args.push(`--proxy-server=${proxyHost}`);
+  }
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const browser = await puppeteer.launch(options);
@@ -138,7 +140,6 @@ const getPage = async (
     waitUntil: "networkidle2",
     timeout: 0,
   });
-
   return { page, browser, cursor };
 };
 
@@ -177,7 +178,6 @@ const task = async (
 ): Promise<void> => {
   const log = (info: string) => console.log(name + ": " + info);
   log("Run!");
-
   let newOptions = { ...options };
 
   let proxyAuth, proxyHost;
@@ -196,7 +196,6 @@ const task = async (
     proxyAuth,
     proxyHost
   );
-
   let numberOfEmptyPasses = 0;
 
   // eslint-disable-next-line no-constant-condition
@@ -216,11 +215,10 @@ const task = async (
           }
         }
       }
-
       // ***
       // Проверяем нужно ли войти
       // ***
-      const [loginBtnPlace] = await page.$x("//span[contains(., 'Start Now')]");
+      const [loginBtnPlace] = await page.$x("//p[contains(., 'Start Now')]");
 
       if (loginBtnPlace !== undefined) {
         log("Click Login Page");
@@ -235,7 +233,7 @@ const task = async (
       // ***
       // Проверяем можно ли собрать монеты
       // ***
-      const [claimBtn] = await page.$x("//span[contains(., 'Claim Mine')]");
+      const [claimBtn] = await page.$x("//p[contains(., 'Claim Mine')]");
 
       if (claimBtn !== undefined) {
         log("Get Claim");
@@ -248,8 +246,8 @@ const task = async (
           void cursor.click();
         });
 
-        await popup.waitForSelector(".react-ripples button");
-        const button = await popup.$(".react-ripples button");
+        await popup.waitForSelector(".react-ripples .button");
+        const button = await popup.$(".react-ripples .button");
 
         if (button) {
           log("Approve Wax");
@@ -365,7 +363,7 @@ const task = async (
       // ***
       // Проверяем можно ли майнить
       // ***
-      const [mineStartBtn] = await page.$x("//span[contains(., 'Mine')]");
+      const [mineStartBtn] = await page.$x("//p[contains(., 'Mine')]");
 
       if (mineStartBtn !== undefined) {
         log("Start Mine");
