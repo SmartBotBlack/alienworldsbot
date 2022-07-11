@@ -178,19 +178,14 @@ const task = async (
 ): Promise<void> => {
   const log = (info: string) => console.log(name + ": " + info);
   log("Run!");
-  let newOptions = { ...options };
 
   let proxyAuth, proxyHost;
   if (proxy) {
     [proxyAuth, proxyHost] = proxy.split("@");
-    newOptions = {
-      ...newOptions,
-      args: [...newOptions.args, `--proxy-server=${proxyHost}`],
-    };
   }
 
   let { browser, page, cursor } = await getPage(
-    newOptions,
+    options,
     cookies,
     log,
     proxyAuth,
