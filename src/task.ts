@@ -225,8 +225,11 @@ const task = async (
         await pause(random(0, 4 * 1000));
 
         numberOfEmptyPasses = 0;
-        numberOfClickLogin++;
+        numberOfClickLogin += 1;
         continue;
+      }
+      if (numberOfClickLogin > 3) {
+        throw new Error("Too many clicks on the login button");
       }
 
       // ***
