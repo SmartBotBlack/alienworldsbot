@@ -74,7 +74,7 @@ const options = {
     "--enable-automation",
     "--enable-blink-features=IdleDetection",
   ],
-  headless: false,
+  headless: process.env.NODE_ENV !== "development",
   slowMo: 20,
   ignoreHTTPSErrors: true,
 };
