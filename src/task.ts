@@ -215,14 +215,21 @@ const task = async (
       // ***
       const [loginBtnPlace] = await page.$x("//p[contains(., 'Start Now')]");
 
-      if (loginBtnPlace !== undefined) {
+      let isClickedClaim = false;
+      let numberOfClickLogin = 0;
+
+      if (loginBtnPlace !== undefined && numberOfClickLogin <= 3) {
         log("Click Login Page");
 
         await loginBtnPlace.click();
         await pause(random(0, 4 * 1000));
 
         numberOfEmptyPasses = 0;
+        numberOfClickLogin += 1;
         continue;
+      }
+      if (numberOfClickLogin > 3) {
+        throw new Error("Too many clicks on the login button");
       }
 
       // ***
@@ -234,6 +241,7 @@ const task = async (
         log("Get Claim");
 
         await claimBtn.click();
+        isClickedClaim = true;
 
         const popup: Page = await new Promise((res) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -246,74 +254,7 @@ const task = async (
 
         if (button) {
           log("Approve Wax");
-
-          const [claimTLM, sleepTime] = await Promise.all([
-            new Promise<number>((res) => {
-              let isRes = false;
-              page.on("console", (msg) => {
-                const args = msg.args();
-
-                for (const arg of args) {
-                  const message = arg.toString();
-                  if (message.includes("Mine result:") && !isRes) {
-                    isRes = true;
-                    const messages = message.split(" ");
-                    res(+(messages[messages.length - 2] || 0));
-                  }
-                }
-              });
-              setTimeout(() => {
-                if (!isRes) {
-                  isRes = true;
-                  res(0);
-                }
-              }, 2e4);
-            }),
-            new Promise<number>((res) => {
-              let isRes = false;
-
-              page.on("console", (msg) => {
-                const args = msg.args();
-                for (const arg of args) {
-                  const message = arg.toString();
-                  if (
-                    message.indexOf("JSHandle:Time until next mine in ms:") ===
-                      0 &&
-                    !isRes
-                  ) {
-                    isRes = true;
-                    res(+(message.match(/\d+/g) || 0));
-                  }
-                }
-              });
-
-              setTimeout(() => {
-                if (!isRes) {
-                  isRes = true;
-                  res(0);
-                }
-              }, 2e4);
-            }),
-            button.click(),
-          ]);
-
-          log(`Mining Bonus: ${claimTLM} TLM`);
-
-          log(`ms until next mine: ${sleepTime}`);
-
-          ({ browser, page, cursor } = await browserSleep(
-            sleepTime - 30 * 1e3,
-            browser,
-            page,
-            options,
-            cookies,
-            log,
-            proxyAuth,
-            proxyHost
-          ));
-
-          numberOfEmptyPasses = 0;
-          continue;
+          await button.click();
         }
       }
 
@@ -321,6 +262,24 @@ const task = async (
       // Проверяем время
       // ***
       const [nextMine] = await page.$x("//p[contains(., 'Next Mine Attempt')]");
+
+      if (isClickedClaim) {
+        try {
+          await page.waitForSelector('[aria-live="polite"]', {
+            timeout: 120 * 1000,
+          });
+          const miningBonusEl = await page.$('[aria-live="polite"]');
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const miningBonus: string = await page.evaluate(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+            (element) => element.textContent,
+            miningBonusEl
+          );
+          log(miningBonus);
+        } catch {
+          //
+        }
+      }
 
       if (nextMine !== undefined) {
         log("Waiting to recharge");
